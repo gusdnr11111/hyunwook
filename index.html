@@ -1,0 +1,4433 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>777 Trade — Crypto Futures Terminal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #070809;
+      --bg-panel: #0d0f12;
+      --bg-elevated: #14171c;
+      --bg-input: #090b0d;
+      --border: #1e2229;
+      --border-strong: #323844;
+      --text-primary: #f5f6f8;
+      --text-secondary: #8c93a0;
+      --text-muted: #565d6a;
+      --accent: #ffffff;
+      --long: #00d084;
+      --long-bg: rgba(0, 208, 132, 0.12);
+      --short: #ff3b5c;
+      --short-bg: rgba(255, 59, 92, 0.12);
+      --warn: #f5b041;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 13px;
+      line-height: 1.4;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    @keyframes liqShake {
+      0%, 100% { transform: translate(0, 0); }
+      15% { transform: translate(-7px, 4px); }
+      30% { transform: translate(7px, -4px); }
+      45% { transform: translate(-5px, -3px); }
+      60% { transform: translate(5px, 3px); }
+      75% { transform: translate(-3px, 2px); }
+    }
+
+    body.shake {
+      animation: liqShake 0.45s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    /* Auth Modal (Sign Up & Login) */
+    #auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 6, 7, 0.95);
+      backdrop-filter: blur(12px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      padding: 30px 26px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
+    }
+
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 20px;
+    }
+
+    .brand-badge {
+      background: #ffffff;
+      color: #000000;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 4px 7px;
+      border-radius: 4px;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-title {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      color: #ffffff;
+    }
+
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 4px;
+      margin-bottom: 18px;
+    }
+
+    .auth-tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 9px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .auth-tab-btn.active {
+      background: #ffffff;
+      color: #000000;
+    }
+
+    .auth-card h2 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .auth-sub {
+      color: var(--text-secondary);
+      font-size: 12px;
+      margin-bottom: 18px;
+    }
+
+    .bonus-pill {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #12151a;
+      border: 1px solid #2b303b;
+      border-radius: 8px;
+      padding: 11px 14px;
+      margin-bottom: 18px;
+    }
+
+    .bonus-pill span:first-child {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .bonus-pill strong {
+      color: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+    }
+
+    .field-group {
+      margin-bottom: 13px;
+    }
+
+    .field-group label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+
+    .field-group input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      color: var(--text-primary);
+      padding: 11px 13px;
+      border-radius: 7px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .field-group input:focus {
+      border-color: #ffffff;
+    }
+
+    .auth-error {
+      display: none;
+      color: var(--short);
+      font-size: 12px;
+      margin-bottom: 10px;
+      background: var(--short-bg);
+      border: 1px solid rgba(255, 59, 92, 0.3);
+      padding: 8px 10px;
+      border-radius: 6px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: #ffffff;
+      color: #000000;
+      border: none;
+      padding: 13px;
+      border-radius: 7px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.92;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.99);
+    }
+
+    /* Admin Login & Management Modals */
+    #admin-login-overlay,
+    #admin-panel-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 4, 5, 0.92);
+      backdrop-filter: blur(10px);
+      z-index: 10050;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .admin-login-card {
+      width: 100%;
+      max-width: 380px;
+      background: var(--bg-panel);
+      border: 1px solid #ffffff;
+      border-radius: 12px;
+      padding: 28px 24px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.95);
+    }
+
+    .admin-dashboard-card {
+      width: 100%;
+      max-width: 1060px;
+      max-height: 88vh;
+      background: var(--bg-panel);
+      border: 1px solid #ffffff;
+      border-radius: 12px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.96);
+    }
+
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-strong);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .admin-stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .admin-stat-box {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+
+    .admin-stat-box span {
+      display: block;
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 3px;
+    }
+
+    .admin-stat-box strong {
+      font-size: 16px;
+    }
+
+    .admin-table-wrap {
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-input);
+      flex: 1;
+    }
+
+    .admin-add-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .admin-amt-input {
+      width: 82px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-strong);
+      color: #ffffff;
+      padding: 4px 7px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      outline: none;
+    }
+
+    .btn-admin-add {
+      background: #ffffff;
+      color: #000000;
+      border: none;
+      padding: 5px 9px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-admin-del {
+      background: var(--short-bg);
+      color: var(--short);
+      border: 1px solid rgba(255, 59, 92, 0.4);
+      padding: 5px 9px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-admin-del:hover {
+      background: var(--short);
+      color: #ffffff;
+    }
+
+    
+    /* Withdraw Modal & Button */
+    .btn-withdraw {
+      background: #ffffff;
+      color: #000000;
+      border: none;
+      padding: 5px 11px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-withdraw:hover {
+      opacity: 0.88;
+    }
+
+    #withdraw-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 4, 5, 0.92);
+      backdrop-filter: blur(10px);
+      z-index: 10040;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .withdraw-card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--bg-panel);
+      border: 1px solid #ffffff;
+      border-radius: 12px;
+      padding: 26px 24px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.95);
+    }
+
+    .withdraw-rate-box {
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .withdraw-rate-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .withdraw-rate-row span:first-child {
+      color: var(--text-secondary);
+    }
+
+    .withdraw-status-pill {
+      padding: 8px 11px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      margin-bottom: 14px;
+      font-weight: 600;
+    }
+
+    .withdraw-status-pill.locked {
+      background: var(--short-bg);
+      color: var(--short);
+      border: 1px solid rgba(255, 59, 92, 0.35);
+    }
+
+    .withdraw-status-pill.unlocked {
+      background: var(--long-bg);
+      color: var(--long);
+      border: 1px solid rgba(0, 208, 132, 0.35);
+    }
+
+    
+    @media (max-width: 768px) {
+      .admin-dashboard-card {
+        padding: 14px 12px;
+        max-height: 92vh;
+      }
+      .admin-stats-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+      .admin-stat-box {
+        padding: 8px 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .admin-stat-box span {
+        margin-bottom: 0;
+      }
+      .admin-stat-box strong {
+        font-size: 13.5px;
+      }
+    }
+
+    /* Top Header */
+    header {
+      min-height: 54px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 18px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      gap: 10px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .header-divider {
+      width: 1px;
+      height: 18px;
+      background: var(--border-strong);
+    }
+
+    .header-subtitle {
+      font-weight: 600;
+      font-size: 13.5px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--long);
+      box-shadow: 0 0 8px var(--long);
+      flex-shrink: 0;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .tier-badge {
+      background: #181b22;
+      border: 1px solid #3c4352;
+      color: #ffffff;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 5px;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      color: var(--text-secondary);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-ghost:hover {
+      border-color: #ffffff;
+      color: #ffffff;
+    }
+
+    /* Live Global Feed Tape */
+    .live-tape-bar {
+      background: #0a0c0f;
+      border-bottom: 1px solid var(--border);
+      height: 30px;
+      display: flex;
+      align-items: center;
+      padding: 0 18px;
+      gap: 12px;
+      font-size: 11px;
+      overflow: hidden;
+    }
+
+    .tape-label {
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 10px;
+      background: #1b1f27;
+      border: 1px solid #303642;
+      padding: 2px 7px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .tape-feed {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      white-space: nowrap;
+      color: var(--text-secondary);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .tape-feed::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1560px;
+      margin: 0 auto;
+      padding: 14px 18px 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Ticker Bar */
+    .ticker-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    .coin-tabs {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .coin-tab {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      transition: all 0.15s;
+    }
+
+    .coin-tab:hover {
+      border-color: var(--border-strong);
+    }
+
+    .coin-tab.active {
+      background: #181c23;
+      border-color: #ffffff;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+    }
+
+    .coin-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #090a0c;
+      border: 1px solid var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 11px;
+      color: #ffffff;
+      flex-shrink: 0;
+    }
+
+    .coin-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .coin-pair {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--text-primary);
+    }
+
+    .coin-price-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      padding-top: 11px;
+      border-top: 1px solid var(--border);
+    }
+
+    .stat-box span {
+      display: block;
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 2px;
+    }
+
+    .stat-box strong {
+      font-size: 14.5px;
+      font-weight: 700;
+    }
+
+    /* Trading Grid */
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr 370px;
+      gap: 14px;
+    }
+
+    /* Chart Panel */
+    .chart-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chart-header {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chart-title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chart-title-group h3 {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .feed-tag {
+      font-size: 10.5px;
+      color: var(--text-secondary);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    .tf-group {
+      display: flex;
+      gap: 3px;
+      background: var(--bg-input);
+      padding: 3px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .tf-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 4px 9px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tf-btn.active {
+      background: #ffffff;
+      color: #000000;
+    }
+
+    .chart-body {
+      display: flex;
+      height: 500px;
+      position: relative;
+      background: #07080a;
+    }
+
+    /* Left Drawing Toolbar */
+    .draw-toolbar {
+      width: 44px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0;
+      gap: 6px;
+      z-index: 10;
+      flex-shrink: 0;
+    }
+
+    .tool-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 6px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.12s;
+      flex-shrink: 0;
+    }
+
+    .tool-btn:hover {
+      background: var(--bg-elevated);
+      color: #ffffff;
+    }
+
+    .tool-btn.active {
+      background: #ffffff;
+      color: #000000;
+    }
+
+    .tool-sep {
+      width: 22px;
+      height: 1px;
+      background: var(--border);
+      margin: 2px 0;
+    }
+
+    .canvas-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    #chartCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .ohlc-overlay {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 11px;
+      pointer-events: none;
+      background: rgba(7, 8, 10, 0.8);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    /* Live Sentiment Bar */
+    .sentiment-strip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 14px;
+      background: #0a0c0f;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+    }
+
+    .sentiment-bar-track {
+      flex: 1;
+      height: 5px;
+      background: var(--short);
+      border-radius: 3px;
+      overflow: hidden;
+      min-width: 40px;
+    }
+
+    .sentiment-bar-fill {
+      height: 100%;
+      background: var(--long);
+      width: 50%;
+      transition: width 0.5s ease;
+    }
+
+    .chart-footer {
+      min-height: 28px;
+      border-top: 1px solid var(--border);
+      padding: 4px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-secondary);
+      background: var(--bg-panel);
+      gap: 8px;
+    }
+
+    /* Order Panel */
+    .order-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+    }
+
+    .order-top-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .margin-badge {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      padding: 3px 9px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .side-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 4px;
+    }
+
+    .side-btn {
+      padding: 11px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+    }
+
+    .side-btn.active.long {
+      background: var(--long);
+      color: #03150e;
+    }
+
+    .side-btn.active.short {
+      background: var(--short);
+      color: #ffffff;
+    }
+
+    .control-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .lev-display {
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      color: #ffffff;
+      padding: 3px 10px;
+      border-radius: 5px;
+      font-weight: 700;
+      font-size: 12.5px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 24px;
+      accent-color: #ffffff;
+      cursor: pointer;
+      margin: 4px 0 6px;
+    }
+
+    .lev-presets {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .preset-btn {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 7px 0;
+      border-radius: 5px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .preset-btn:hover {
+      border-color: var(--border-strong);
+      color: #ffffff;
+    }
+
+    .preset-btn.active {
+      background: #ffffff;
+      color: #000000;
+      border-color: #ffffff;
+    }
+
+    .margin-input-box {
+      display: flex;
+      align-items: center;
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      border-radius: 7px;
+      padding: 9px 12px;
+      gap: 8px;
+    }
+
+    .margin-input-box input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 700;
+      outline: none;
+      width: 100%;
+    }
+
+    .quick-amt-btns {
+      display: flex;
+      gap: 5px;
+    }
+
+    .mini-btn {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 5px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .mini-btn:hover {
+      color: #ffffff;
+      border-color: #ffffff;
+    }
+
+    .mini-btn.max {
+      background: #ffffff;
+      color: #000000;
+      border-color: #ffffff;
+    }
+
+    .pct-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .tpsl-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .tpsl-grid input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: #ffffff;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .tpsl-grid input:focus {
+      border-color: #ffffff;
+    }
+
+    .summary-box {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      font-size: 12px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .summary-row span:first-child {
+      color: var(--text-secondary);
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .submit-btn.long {
+      background: var(--long);
+      color: #02140d;
+    }
+
+    .submit-btn.short {
+      background: var(--short);
+      color: #ffffff;
+    }
+
+    .submit-btn:active {
+      transform: scale(0.99);
+    }
+
+    /* Bottom Positions & Leaderboard Panel */
+    .positions-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .pos-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pos-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .pos-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .pos-tab {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 7px 13px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .pos-tab.active {
+      background: #ffffff;
+      color: #000000;
+      border-color: #ffffff;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 12.5px;
+    }
+
+    th {
+      color: var(--text-secondary);
+      font-weight: 500;
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11.5px;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 11px 10px;
+      border-bottom: 1px solid rgba(30, 34, 41, 0.6);
+      white-space: nowrap;
+    }
+
+    .badge-side {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 11px;
+      margin-right: 6px;
+    }
+
+    .badge-side.LONG {
+      background: var(--long-bg);
+      color: var(--long);
+      border: 1px solid rgba(0, 208, 132, 0.3);
+    }
+
+    .badge-side.SHORT {
+      background: var(--short-bg);
+      color: var(--short);
+      border: 1px solid rgba(255, 59, 92, 0.3);
+    }
+
+    .close-pos-btn {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      color: #ffffff;
+      padding: 6px 12px;
+      border-radius: 5px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .close-pos-btn:hover {
+      background: #ffffff;
+      color: #000000;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 28px 0;
+      color: var(--text-muted);
+      font-size: 12.5px;
+    }
+
+    .bankrupt-notice {
+      display: none;
+      background: #190d11;
+      border: 1px solid var(--short);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      font-size: 12px;
+      color: #ffd6de;
+    }
+
+    .rank-meta-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .mobile-trade-dock {
+      display: none;
+    }
+
+    /* PnL Card Modal */
+    #pnl-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 9997;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .pnl-card {
+      width: 100%;
+      max-width: 390px;
+      background: #0a0b0e;
+      border: 1px solid #ffffff;
+      border-radius: 12px;
+      padding: 26px 22px;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.95);
+    }
+
+    .pnl-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .pnl-roi-big {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin: 8px 0 4px;
+    }
+
+    .pnl-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-strong);
+      font-size: 12px;
+    }
+
+    /* Toast Notification */
+    #toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 10099;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: #14171d;
+      border: 1px solid #3a414f;
+      color: #ffffff;
+      padding: 11px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.75);
+      animation: slideIn 0.2s ease-out;
+      max-width: 340px;
+    }
+
+    .toast.liq {
+      border-color: var(--short);
+      background: #1d1014;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .text-long { color: var(--long); }
+    .text-short { color: var(--short); }
+    .text-warn { color: var(--warn); }
+
+    /* Responsive Breakpoints */
+    @media (max-width: 1100px) {
+      .coin-tabs {
+        display: flex;
+        overflow-x: auto;
+        scrollbar-width: none;
+        padding-bottom: 2px;
+      }
+      .coin-tabs::-webkit-scrollbar {
+        display: none;
+      }
+      .coin-tab {
+        min-width: 148px;
+        flex-shrink: 0;
+      }
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding-bottom: 72px;
+      }
+
+      header {
+        padding: 8px 12px;
+      }
+
+      .header-divider,
+      .header-subtitle,
+      .tier-badge {
+        display: none;
+      }
+
+      .user-chip {
+        padding: 4px 8px;
+        font-size: 11.5px;
+        gap: 6px;
+      }
+
+      .live-tape-bar {
+        padding: 0 12px;
+        height: 28px;
+      }
+
+      .container {
+        padding: 10px 10px 24px;
+        gap: 10px;
+      }
+
+      .ticker-panel {
+        padding: 10px;
+      }
+
+      .stats-strip {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px 12px;
+        padding-top: 10px;
+      }
+
+      .stat-box:last-child {
+        grid-column: span 2;
+      }
+
+      .stat-box strong {
+        font-size: 13.5px;
+      }
+
+      .chart-header {
+        padding: 10px 12px;
+      }
+
+      .feed-tag {
+        display: none;
+      }
+
+      .tf-group {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .tf-btn {
+        flex: 1;
+        padding: 5px 0;
+        text-align: center;
+      }
+
+      .chart-body {
+        flex-direction: column-reverse;
+        height: 360px;
+      }
+
+      .draw-toolbar {
+        width: 100%;
+        height: 44px;
+        flex-direction: row;
+        justify-content: space-around;
+        border-right: none;
+        border-top: 1px solid var(--border);
+        padding: 0 8px;
+      }
+
+      .tool-sep {
+        width: 1px;
+        height: 20px;
+        margin: 0 2px;
+      }
+
+      .ohlc-overlay {
+        font-size: 10px;
+        gap: 7px;
+        padding: 3px 6px;
+        left: 8px;
+        top: 6px;
+      }
+
+      .sentiment-strip {
+        padding: 6px 10px;
+        font-size: 10px;
+        gap: 6px;
+      }
+
+      .chart-footer {
+        padding: 4px 10px;
+        font-size: 10px;
+      }
+
+      #clock-display {
+        display: none;
+      }
+
+      .order-panel {
+        padding: 14px 12px;
+      }
+
+      .positions-panel {
+        padding: 12px 10px;
+      }
+
+      .pos-tab {
+        padding: 6px 10px;
+        font-size: 11.5px;
+      }
+
+      .mobile-trade-dock {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 62px;
+        background: rgba(13, 15, 18, 0.96);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid var(--border-strong);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 8px 12px;
+        z-index: 95;
+      }
+
+      .dock-btn {
+        border: none;
+        border-radius: 7px;
+        font-weight: 700;
+        font-size: 13.5px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .dock-btn.long {
+        background: var(--long);
+        color: #02140d;
+      }
+
+      .dock-btn.short {
+        background: var(--short);
+        color: #ffffff;
+      }
+
+      #toast-container {
+        bottom: 72px;
+        left: 12px;
+        right: 12px;
+        align-items: center;
+      }
+
+      .toast {
+        width: 100%;
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sign-up & Login Overlay -->
+  <div id="auth-overlay">
+    <div class="auth-card">
+      <div class="brand-mark">
+        <span class="brand-badge">777</span>
+        <span class="brand-title">777 Trade</span>
+      </div>
+
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab-btn active" id="auth-tab-login">로그인</button>
+        <button type="button" class="auth-tab-btn" id="auth-tab-signup">회원가입</button>
+      </div>
+
+      <!-- Login Form -->
+      <div id="login-view">
+        <h2>트레이더 로그인</h2>
+        <p class="auth-sub">기존 계정의 이메일(또는 닉네임)과 비밀번호로 접속하세요</p>
+        <div class="auth-error" id="login-error"></div>
+        <form id="login-form">
+          <div class="field-group">
+            <label>이메일 또는 닉네임</label>
+            <input type="text" id="login-identifier" placeholder="trader@777trade.io 또는 닉네임" required />
+          </div>
+          <div class="field-group">
+            <label>비밀번호</label>
+            <input type="password" id="login-password" placeholder="••••••••" required />
+          </div>
+          <button type="submit" class="btn-primary">로그인</button>
+        </form>
+      </div>
+
+      <!-- Sign Up Form -->
+      <div id="signup-view" style="display:none;">
+        <h2>모의 선물 계좌 개설</h2>
+        <p class="auth-sub">실시간 바이낸스 시세 기반 멀티플레이어 무기한 선물 터미널</p>
+
+        <div class="bonus-pill">
+          <span>신규 가입 즉시 지급 증거금 (1회 한정)</span>
+          <strong>$1,000.00 USDT</strong>
+        </div>
+
+        <div class="auth-error" id="signup-error"></div>
+        <form id="signup-form">
+          <div class="field-group">
+            <label>트레이더 닉네임 (실시간 랭킹에 표시됨)</label>
+            <input type="text" id="reg-nickname" placeholder="예: Satoshi_777" required maxlength="18" />
+          </div>
+          <div class="field-group">
+            <label>이메일 주소</label>
+            <input type="email" id="reg-email" placeholder="trader@777trade.io" required />
+          </div>
+          <div class="field-group">
+            <label>비밀번호</label>
+            <input type="password" id="reg-password" placeholder="••••••••" required minlength="4" />
+          </div>
+          <button type="submit" class="btn-primary" id="signup-submit-btn">가입하고 $1,000 받기</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Login Modal (Ctrl + Shift + A) -->
+  <div id="admin-login-overlay">
+    <div class="admin-login-card">
+      <div class="brand-mark" style="margin-bottom:14px;">
+        <span class="brand-badge">ADMIN</span>
+        <span class="brand-title" style="font-size:17px;">777 Trade 시스템 관리자</span>
+      </div>
+      <p class="auth-sub" style="margin-bottom:16px;">관리자 계정 인증 후 전체 회원 및 자산을 제어할 수 있습니다.</p>
+      <div class="auth-error" id="admin-login-error">관리자 아이디 또는 비밀번호가 일치하지 않습니다.</div>
+      <form id="admin-login-form">
+        <div class="field-group">
+          <label>관리자 아이디</label>
+          <input type="text" id="admin-id-input" placeholder="아이디 입력" autocomplete="off" required />
+        </div>
+        <div class="field-group">
+          <label>관리자 비밀번호</label>
+          <input type="password" id="admin-pw-input" placeholder="비밀번호 입력" required />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+          <button type="button" class="btn-ghost" id="close-admin-login-btn" style="padding:11px;">취소</button>
+          <button type="submit" class="btn-primary" style="margin-top:0;">관리자 접속</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin User Management Panel -->
+  <div id="admin-panel-overlay">
+    <div class="admin-dashboard-card">
+      <div class="admin-header">
+        <div class="brand-mark" style="margin-bottom:0;">
+          <span class="brand-badge">ADMIN</span>
+          <span class="brand-title" style="font-size:17px;">777 Trade 회원 통합 관리 콘솔</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-ghost" id="admin-tab-users" style="border-color:#fff;color:#fff;">회원 관리</button>
+          <button class="btn-ghost" id="admin-tab-withdraws">출금 신청 내역 (<span id="admin-wd-count">0</span>)</button>
+          <button class="btn-ghost" id="admin-refresh-btn">새로고침</button>
+          <button class="btn-ghost" id="close-admin-panel-btn" style="border-color:#fff;color:#fff;">닫기 (ESC)</button>
+        </div>
+      </div>
+
+      <div class="admin-stats-row mono">
+        <div class="admin-stat-box">
+          <span>전체 등록 회원 수</span>
+          <strong id="admin-total-users">0명</strong>
+        </div>
+        <div class="admin-stat-box">
+          <span>전체 보유 현금 합계</span>
+          <strong id="admin-total-cash">$0.00</strong>
+        </div>
+        <div class="admin-stat-box">
+          <span>실시간 평가 자산 합계</span>
+          <strong id="admin-total-equity">$0.00</strong>
+        </div>
+      </div>
+
+      <div class="admin-table-wrap" id="admin-users-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>닉네임</th>
+              <th>이메일</th>
+              <th>비밀번호</th>
+              <th>보유 잔고 (USDT)</th>
+              <th>총 평가 자산</th>
+              <th>진행 포지션</th>
+              <th>돈 추가 (USDT)</th>
+              <th style="text-align:right;">계정 삭제</th>
+            </tr>
+          </thead>
+          <tbody id="admin-users-tbody"></tbody>
+        </table>
+        <div class="empty-state" id="admin-empty-users" style="display:none;">등록된 회원 데이터가 없습니다.</div>
+      </div>
+      <div class="admin-table-wrap" id="admin-wd-wrap" style="display:none;">
+        <table>
+          <thead>
+            <tr>
+              <th>신청 시간</th>
+              <th>닉네임 (이메일)</th>
+              <th>차감 모의 달러</th>
+              <th>정산 지급액 (1,000:1)</th>
+              <th>BNB 지갑 주소</th>
+              <th style="text-align:right;">상태 / 처리</th>
+            </tr>
+          </thead>
+          <tbody id="admin-wd-tbody"></tbody>
+        </table>
+        <div class="empty-state" id="admin-empty-wd" style="display:none;">접수된 출금 신청 내역이 없습니다.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PnL Certificate Modal -->
+  <div id="pnl-modal">
+    <div class="pnl-card">
+      <div class="pnl-card-top">
+        <div class="brand-mark" style="margin-bottom:0;">
+          <span class="brand-badge">777</span>
+          <span class="brand-title" style="font-size:16px;">777 Trade</span>
+        </div>
+        <span class="mono" style="font-size:11px;color:var(--text-secondary);" id="cert-time">--:--</span>
+      </div>
+      <div style="font-size:13px;font-weight:700;" id="cert-pair">BTC/USDT · LONG 100x</div>
+      <div class="pnl-roi-big mono text-long" id="cert-roi">+0.00%</div>
+      <div class="mono" style="font-size:14px;font-weight:600;" id="cert-pnl">+$0.00 USDT</div>
+
+      <div class="pnl-grid mono">
+        <div>
+          <span style="color:var(--text-secondary);display:block;font-size:11px;">진입 가격</span>
+          <strong id="cert-entry">$0.00</strong>
+        </div>
+        <div>
+          <span style="color:var(--text-secondary);display:block;font-size:11px;">청산 가격</span>
+          <strong id="cert-close">$0.00</strong>
+        </div>
+        <div>
+          <span style="color:var(--text-secondary);display:block;font-size:11px;">트레이더</span>
+          <strong id="cert-user">Trader</strong>
+        </div>
+        <div>
+          <span style="color:var(--text-secondary);display:block;font-size:11px;">청산 유형</span>
+          <strong id="cert-reason">시장가 청산</strong>
+        </div>
+      </div>
+
+      <button class="btn-primary" style="margin-top:20px;" id="close-cert-btn">확인</button>
+    </div>
+  </div>
+
+    <!-- Withdraw Modal ($1,000,000,000 Minimum, 1000:1 Rate, BNB Address) -->
+  <div id="withdraw-modal-overlay">
+    <div class="withdraw-card">
+      <div class="brand-mark" style="margin-bottom:14px;">
+        <span class="brand-badge">WITHDRAW</span>
+        <span class="brand-title" style="font-size:17px;">777 Trade 정산 출금</span>
+      </div>
+      <p class="auth-sub" style="margin-bottom:14px;">보유 잔고 <strong>$1,000,000,000 (10억불)</strong> 이상 달성 시 BNB 지갑으로 출금 신청이 가능합니다.</p>
+
+      <div id="withdraw-eligibility-pill" class="withdraw-status-pill locked mono">
+        출금 불가 · 최소 보유 조건: $1,000,000,000.00
+      </div>
+
+      <div class="withdraw-rate-box mono">
+        <div class="withdraw-rate-row">
+          <span>현재 보유 잔고</span>
+          <strong id="wd-current-bal">$1,000.00</strong>
+        </div>
+        <div class="withdraw-rate-row">
+          <span>정산 환율</span>
+          <strong>1,000 모의불 = $1.00 USD (BNB)</strong>
+        </div>
+        <div class="withdraw-rate-row">
+          <span>최소 출금 기준</span>
+          <strong class="text-warn">$1,000,000,000.00</strong>
+        </div>
+      </div>
+
+      <div class="auth-error" id="withdraw-error"></div>
+
+      <form id="withdraw-form">
+        <div class="field-group">
+          <label>출금 신청 모의 금액 (최소 $1,000,000,000)</label>
+          <div class="margin-input-box" style="padding:7px 11px;">
+            <span class="mono" style="color:var(--text-secondary);">$</span>
+            <input type="number" inputmode="decimal" id="wd-amount-input" class="mono" placeholder="1000000000" min="1000000000" step="any" required />
+            <button type="button" class="mini-btn max" id="wd-max-btn">MAX</button>
+          </div>
+          <div class="mono" style="font-size:11.5px;color:var(--text-secondary);margin-top:6px;display:flex;justify-content:space-between;">
+            <span>실제 정산 수령액 (1,000:1)</span>
+            <strong class="text-long" id="wd-payout-usd">$0.00 USD (BNB)</strong>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>수령할 BNB 지갑 주소 (BEP-20 / BSC)</label>
+          <input type="text" id="wd-bnb-address" class="mono" placeholder="0x... 또는 bnb1... 지갑 주소를 입력하세요" required minlength="20" maxlength="80" />
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+          <button type="button" class="btn-ghost" id="close-withdraw-btn" style="padding:11px;">닫기</button>
+          <button type="submit" class="btn-primary" id="submit-withdraw-btn" style="margin-top:0;">BNB 출금 신청</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Header -->
+  <header>
+    <div class="header-left">
+      <div class="brand-mark" id="header-brand-trigger" style="margin-bottom:0;cursor:pointer;">
+        <span class="brand-badge">777</span>
+        <span class="brand-title" style="font-size:17px;">777 Trade</span>
+      </div>
+      <div class="header-divider"></div>
+      <div class="header-subtitle">
+        <span class="live-dot" id="ws-status-dot"></span>
+        <span>암호화폐 무기한 선물 (Perpetual Futures)</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="tier-badge mono" id="user-tier-badge">TIER · BRONZE</div>
+      <div class="user-chip">
+        <span style="color:var(--text-secondary);" id="header-user">Guest</span>
+        <span style="color:var(--border-strong);">|</span>
+        <span class="mono" style="font-weight:700;" id="header-balance">$1,000.00</span>
+      </div>
+      <button class="btn-withdraw" id="open-withdraw-btn">출금</button>
+      <button class="btn-ghost" id="logout-btn">로그아웃</button>
+    </div>
+  </header>
+
+  <!-- Live Global User Trade & Liquidation Feed -->
+  <div class="live-tape-bar">
+    <span class="tape-label mono" id="online-users-badge">LIVE · 1명</span>
+    <div class="tape-feed mono" id="live-tape-feed">
+      <span>실시간 트레이더 포지션 진입 및 강제 청산 내역이 여기에 표시됩니다.</span>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Market Ticker Bar -->
+    <div class="ticker-panel">
+      <div class="coin-tabs" id="coin-tabs"></div>
+
+      <div class="stats-strip">
+        <div class="stat-box">
+          <span>시장가 (Mark Price)</span>
+          <strong class="mono" id="stat-mark">$0.00</strong>
+        </div>
+        <div class="stat-box">
+          <span>24시간 변동률</span>
+          <strong class="mono" id="stat-change">0.00%</strong>
+        </div>
+        <div class="stat-box">
+          <span>24시간 고가 / 저가</span>
+          <strong class="mono" id="stat-highlow" style="font-size:13px;">$0.00 / $0.00</strong>
+        </div>
+        <div class="stat-box">
+          <span>펀딩비 (8시간)</span>
+          <strong class="mono text-warn" id="stat-funding">+0.0037%</strong>
+        </div>
+        <div class="stat-box">
+          <span>시세 피드 · 최대 레버리지</span>
+          <strong class="mono" style="font-size:13px;">Binance Live · 2x~1,000x</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Chart + Order Form -->
+    <div class="workspace">
+      <!-- Chart Section -->
+      <div class="chart-panel">
+        <div class="chart-header">
+          <div class="chart-title-group">
+            <h3 id="chart-pair-title">BTC/USDT 무기한 선물</h3>
+            <span class="feed-tag mono" id="chart-feed-tag">BINANCE:BTCUSDT · 실시간</span>
+          </div>
+          <div class="tf-group" id="tf-group">
+            <button class="tf-btn active" data-tf="1m">1분</button>
+            <button class="tf-btn" data-tf="5m">5분</button>
+            <button class="tf-btn" data-tf="15m">15분</button>
+            <button class="tf-btn" data-tf="1h">1시간</button>
+            <button class="tf-btn" data-tf="4h">4시간</button>
+            <button class="tf-btn" data-tf="1d">1일</button>
+          </div>
+        </div>
+
+        <div class="chart-body">
+          <!-- Drawing Tools -->
+          <div class="draw-toolbar">
+            <button class="tool-btn active" data-tool="crosshair" title="십자선 커서">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="trendline" title="추세선 그리기">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="20" x2="20" y2="4"/><circle cx="4" cy="20" r="2"/><circle cx="20" cy="4" r="2"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="hline" title="수평 지지/저항선">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="2" y1="12" x2="22" y2="12"/><circle cx="12" cy="12" r="2"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="rect" title="가격 박스 영역">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12" rx="1"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="brush" title="자유 펜 그리기">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            </button>
+            <div class="tool-sep"></div>
+            <button class="tool-btn" id="undo-draw-btn" title="마지막 그리기 실행취소">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+            </button>
+            <button class="tool-btn" id="clear-draw-btn" title="그리기 전체 삭제">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+            </button>
+          </div>
+
+          <div class="canvas-wrap" id="canvas-wrap">
+            <canvas id="chartCanvas"></canvas>
+            <div class="ohlc-overlay mono" id="ohlc-overlay">
+              <span>시 <b id="o-val">-</b></span>
+              <span>고 <b id="h-val">-</b></span>
+              <span>저 <b id="l-val">-</b></span>
+              <span>종 <b id="c-val">-</b></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-Time User Long / Short Ratio Bar -->
+        <div class="sentiment-strip mono">
+          <span class="text-long" id="long-ratio-text">롱 50.0%</span>
+          <div class="sentiment-bar-track">
+            <div class="sentiment-bar-fill" id="sentiment-bar-fill"></div>
+          </div>
+          <span class="text-short" id="short-ratio-text">숏 50.0%</span>
+        </div>
+
+        <div class="chart-footer mono">
+          <span id="draw-hint">도구: 십자선 · 차트 터치/드래그로 지지·저항 및 추세선 작도</span>
+          <span id="clock-display">--:--:-- UTC+9</span>
+        </div>
+      </div>
+
+      <!-- Order Execution Panel -->
+      <div class="order-panel" id="order-panel-section">
+        <div class="order-top-meta">
+          <span class="margin-badge">격리 마진 (Isolated)</span>
+          <span class="text-long mono" style="font-weight:600;">수수료 0.00%</span>
+        </div>
+
+        <div class="side-toggle">
+          <button class="side-btn active long" id="btn-side-long">롱 매수 (LONG)</button>
+          <button class="side-btn short" id="btn-side-short">숏 매도 (SHORT)</button>
+        </div>
+
+        <!-- Leverage -->
+        <div>
+          <div class="control-header">
+            <span>레버리지 (2x ~ 1,000x)</span>
+            <span class="lev-display mono" id="lev-text">100x</span>
+          </div>
+          <input type="range" id="lev-slider" min="2" max="1000" value="100" />
+          <div class="lev-presets" id="lev-presets">
+            <button class="preset-btn" data-lev="2">2x</button>
+            <button class="preset-btn" data-lev="5">5x</button>
+            <button class="preset-btn" data-lev="10">10x</button>
+            <button class="preset-btn" data-lev="25">25x</button>
+            <button class="preset-btn" data-lev="50">50x</button>
+            <button class="preset-btn active" data-lev="100">100x</button>
+            <button class="preset-btn" data-lev="500">500x</button>
+            <button class="preset-btn" data-lev="1000">1000x</button>
+          </div>
+        </div>
+
+        <!-- Margin -->
+        <div>
+          <div class="control-header">
+            <span>증거금 (Margin USDT)</span>
+            <span class="mono">주문 가능: <b style="color:#fff;" id="avail-margin">$1,000.00</b></span>
+          </div>
+          <div class="margin-input-box">
+            <span class="mono" style="color:var(--text-secondary);">$</span>
+            <input type="number" inputmode="decimal" id="margin-input" class="mono" value="100" min="1" step="any" />
+            <div class="quick-amt-btns">
+              <button class="mini-btn" id="btn-half">1/2</button>
+              <button class="mini-btn" id="btn-double">2x</button>
+              <button class="mini-btn max" id="btn-max">MAX</button>
+            </div>
+          </div>
+          <div class="pct-grid">
+            <button class="preset-btn pct-btn" data-pct="0.25">25%</button>
+            <button class="preset-btn pct-btn" data-pct="0.50">50%</button>
+            <button class="preset-btn pct-btn" data-pct="0.75">75%</button>
+            <button class="preset-btn pct-btn" data-pct="1.00">100%</button>
+          </div>
+        </div>
+
+        <!-- TP / SL -->
+        <div>
+          <div class="control-header">
+            <span>익절(TP) / 손절(SL) 선택 예약</span>
+            <div>
+              <button class="mini-btn text-long" id="quick-tp" style="margin-right:3px;">TP+100%</button>
+              <button class="mini-btn text-short" id="quick-sl">SL-50%</button>
+            </div>
+          </div>
+          <div class="tpsl-grid">
+            <input type="number" inputmode="decimal" id="tp-input" class="mono" placeholder="익절가 (TP)" step="any" />
+            <input type="number" inputmode="decimal" id="sl-input" class="mono" placeholder="손절가 (SL)" step="any" />
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-box mono">
+          <div class="summary-row">
+            <span>총 포지션 규모</span>
+            <strong id="sum-size">$10,000.00</strong>
+          </div>
+          <div class="summary-row">
+            <span>진입 예상가</span>
+            <strong id="sum-entry">$0.00</strong>
+          </div>
+          <div class="summary-row">
+            <span>예상 강제 청산가</span>
+            <strong class="text-warn" id="sum-liq">$0.00 (-0.90%)</strong>
+          </div>
+        </div>
+
+        <div class="bankrupt-notice" id="bankrupt-notice">
+          보유 증거금이 모두 소진되어 파산 상태입니다. (리충전 불가)
+        </div>
+
+        <button class="submit-btn long" id="submit-order-btn">롱(LONG) 포지션 진입 · 100x</button>
+      </div>
+    </div>
+
+    <!-- Positions, History & Real-Time Multiplayer Leaderboard -->
+    <div class="positions-panel">
+      <div class="pos-header">
+        <div class="pos-tabs">
+          <button class="pos-tab active" id="tab-open-pos">포지션 (<span id="open-count">0</span>)</button>
+          <button class="pos-tab" id="tab-history-pos">거래 내역 (<span id="hist-count">0</span>)</button>
+          <button class="pos-tab" id="tab-rank-pos">실시간 랭킹 (<span id="rank-user-count">0</span>명)</button>
+        </div>
+        <div class="mono" style="font-size:12px;">
+          미실현 손익: <strong id="total-upnl">$0.00</strong>
+        </div>
+      </div>
+
+      <!-- Open Positions -->
+      <div class="table-wrap" id="open-pos-view">
+        <table>
+          <thead>
+            <tr>
+              <th>페어 · 레버리지</th>
+              <th>증거금 / 규모</th>
+              <th>진입가</th>
+              <th>현재 시장가</th>
+              <th>예상 청산가</th>
+              <th>TP / SL</th>
+              <th>미실현 손익 (ROE%)</th>
+              <th style="text-align:right;">청산</th>
+            </tr>
+          </thead>
+          <tbody id="open-pos-body"></tbody>
+        </table>
+        <div class="empty-state" id="empty-open">현재 보유 중인 선물 포지션이 없습니다.</div>
+      </div>
+
+      <!-- History -->
+      <div class="table-wrap" id="history-pos-view" style="display:none;">
+        <table>
+          <thead>
+            <tr>
+              <th>시간</th>
+              <th>페어 · 방향</th>
+              <th>증거금</th>
+              <th>진입가</th>
+              <th>청산가</th>
+              <th>유형</th>
+              <th style="text-align:right;">실현 손익 · 인증서</th>
+            </tr>
+          </thead>
+          <tbody id="history-pos-body"></tbody>
+        </table>
+        <div class="empty-state" id="empty-hist">종료된 거래 내역이 없습니다.</div>
+      </div>
+
+      <!-- Real-Time Multiplayer Leaderboard -->
+      <div class="table-wrap" id="rank-pos-view" style="display:none;">
+        <div class="rank-meta-bar mono">
+          <span id="sync-status-text">● 글로벌 서버 연결 중...</span>
+          <div>
+            <button class="mini-btn" id="force-sync-btn" style="margin-right:6px;">새로고침</button>
+            <span id="rank-last-updated">--:--:--</span>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>순위</th>
+              <th>트레이더</th>
+              <th>등급</th>
+              <th>현재 포지션</th>
+              <th>누적 수익률 (ROI)</th>
+              <th style="text-align:right;">총 평가 자산</th>
+            </tr>
+          </thead>
+          <tbody id="rank-pos-body"></tbody>
+        </table>
+        <div class="empty-state" id="empty-rank" style="display:none;">아직 등록된 트레이더가 없습니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Sticky Quick-Action Bar -->
+  <div class="mobile-trade-dock">
+    <button class="dock-btn long" id="mob-dock-long">롱 매수 (LONG)</button>
+    <button class="dock-btn short" id="mob-dock-short">숏 매도 (SHORT)</button>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script>
+    // ==========================================
+    // 1. Web Audio Synthesizer ("띠링~" Sound FX)
+    // ==========================================
+    const SoundFX = (() => {
+      let ctx = null;
+      function getCtx() {
+        if (!ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          ctx = new AudioContext();
+        }
+        if (ctx.state === 'suspended') ctx.resume();
+        return ctx;
+      }
+
+      function playDing() {
+        try {
+          const ac = getCtx();
+          const now = ac.currentTime;
+
+          const osc1 = ac.createOscillator();
+          const gain1 = ac.createGain();
+          osc1.type = 'sine';
+          osc1.frequency.setValueAtTime(1318.51, now);
+          gain1.gain.setValueAtTime(0.001, now);
+          gain1.gain.exponentialRampToValueAtTime(0.22, now + 0.015);
+          gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+          osc1.connect(gain1);
+          gain1.connect(ac.destination);
+          osc1.start(now);
+          osc1.stop(now + 0.24);
+
+          const osc2 = ac.createOscillator();
+          const osc2Harm = ac.createOscillator();
+          const gain2 = ac.createGain();
+          osc2.type = 'sine';
+          osc2Harm.type = 'triangle';
+          osc2.frequency.setValueAtTime(1975.53, now + 0.09);
+          osc2Harm.frequency.setValueAtTime(3951.06, now + 0.09);
+
+          gain2.gain.setValueAtTime(0.001, now + 0.09);
+          gain2.gain.exponentialRampToValueAtTime(0.26, now + 0.11);
+          gain2.gain.exponentialRampToValueAtTime(0.0008, now + 0.72);
+
+          osc2.connect(gain2);
+          osc2Harm.connect(gain2);
+          gain2.connect(ac.destination);
+          osc2.start(now + 0.09);
+          osc2Harm.start(now + 0.09);
+          osc2.stop(now + 0.75);
+          osc2Harm.stop(now + 0.75);
+        } catch (e) {}
+      }
+
+      function playCloseProfit() {
+        try {
+          const ac = getCtx();
+          const now = ac.currentTime;
+          [1046.5, 1318.5, 1567.98].forEach((freq, i) => {
+            const osc = ac.createOscillator();
+            const g = ac.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + i * 0.06);
+            g.gain.setValueAtTime(0.14, now + i * 0.06);
+            g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.35);
+            osc.connect(g);
+            g.connect(ac.destination);
+            osc.start(now + i * 0.06);
+            osc.stop(now + i * 0.06 + 0.36);
+          });
+        } catch (e) {}
+      }
+
+      function playLiquidation() {
+        try {
+          const ac = getCtx();
+          const now = ac.currentTime;
+          [320, 210].forEach((freq, i) => {
+            const osc = ac.createOscillator();
+            const g = ac.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, now + i * 0.14);
+            g.gain.setValueAtTime(0.2, now + i * 0.14);
+            g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.14 + 0.32);
+            osc.connect(g);
+            g.connect(ac.destination);
+            osc.start(now + i * 0.14);
+            osc.stop(now + i * 0.14 + 0.34);
+          });
+        } catch (e) {}
+      }
+
+      return { playDing, playCloseProfit, playLiquidation };
+    })();
+
+    // ==========================================
+    // 2. Market Configuration & App State
+    // ==========================================
+    const MARKETS = [
+      { id: 'BTCUSDT', base: 'BTC', name: 'BTC/USDT', icon: '₿', decimals: 2, fallback: 91450.00 },
+      { id: 'ETHUSDT', base: 'ETH', name: 'ETH/USDT', icon: 'Ξ', decimals: 2, fallback: 3120.50 },
+      { id: 'SOLUSDT', base: 'SOL', name: 'SOL/USDT', icon: '◎', decimals: 2, fallback: 215.40 },
+      { id: 'BNBUSDT', base: 'BNB', name: 'BNB/USDT', icon: '❖', decimals: 2, fallback: 635.80 },
+      { id: 'XRPUSDT', base: 'XRP', name: 'XRP/USDT', icon: '✕', decimals: 4, fallback: 1.4250 },
+      { id: 'DOGEUSDT', base: 'DOGE', name: 'DOGE/USDT', icon: 'Ð', decimals: 5, fallback: 0.38450 },
+      { id: 'USDCUSDT', base: 'USDT', name: 'USDT/USD', icon: '₮', decimals: 4, fallback: 1.0001 }
+    ];
+
+    const state = {
+      user: null,
+      balance: 1000.00,
+      selectedSymbol: 'BTCUSDT',
+      timeframe: '1m',
+      side: 'LONG',
+      leverage: 100,
+      prices: {},
+      stats24h: {},
+      candles: [],
+      positions: [],
+      history: [],
+      drawTool: 'crosshair',
+      drawings: {},
+      currentDrawing: null,
+      mouse: { x: -1, y: -1, inside: false },
+      globalPlayers: {},
+      globalEvents: [],
+      deletedUserIds: {}
+    };
+
+    MARKETS.forEach(m => {
+      state.prices[m.id] = m.fallback;
+      state.stats24h[m.id] = {
+        change: '0.00',
+        high: m.fallback * 1.032,
+        low: m.fallback * 0.968
+      };
+      state.drawings[m.id] = [];
+    });
+
+    // ==========================================
+    // 3. Cross-Device Real-Time Sync Engine
+    // ==========================================
+    const CHANNEL_ID = '777trade_live_futures_room_v3_991100';
+    const MQTT_TOPIC_PLAYERS = `777trade/v3/arena/players`;
+    const MQTT_TOPIC_EVENTS = `777trade/v3/arena/events`;
+    const MQTT_TOPIC_ADMIN = `777trade/v3/arena/admin`;
+    const NTFY_TOPIC = `777trade_v3_arena_sync_77419`;
+
+    const localBus = ('BroadcastChannel' in window) ? new BroadcastChannel(CHANNEL_ID) : null;
+    let mqttClient = null;
+    let mqttConnected = false;
+    let ntfyConnected = false;
+
+    function updateSyncStatusUI() {
+      const el = document.getElementById('sync-status-text');
+      if (mqttConnected || ntfyConnected) {
+        const mode = mqttConnected ? '글로벌 실시간 서버(WSS) 연결됨' : '글로벌 클라우드 릴레이(HTTP) 연결됨';
+        el.textContent = `● ${mode} · 실시간 동기화 중`;
+        el.className = 'text-long';
+      } else {
+        el.textContent = '● 서버 재연결 시도 중...';
+        el.className = 'text-warn';
+      }
+    }
+
+    function setupMultiplayerSync() {
+      if (localBus) {
+        localBus.onmessage = (ev) => {
+          if (!ev.data) return;
+          if (ev.data.type === 'PLAYER') ingestRemotePlayer(ev.data.payload);
+          if (ev.data.type === 'EVENT') ingestRemoteEvent(ev.data.payload);
+          if (ev.data.type === 'ADMIN_CMD') handleAdminCommand(ev.data.payload);
+          if (ev.data.type === 'WITHDRAW') ingestRemoteWithdraw(ev.data.payload);
+        };
+      }
+
+      connectNtfyRelay();
+
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js';
+      script.async = true;
+      script.onload = () => connectMqttBroker();
+      script.onerror = () => {
+        const fallbackScript = document.createElement('script');
+        fallbackScript.src = 'https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js';
+        fallbackScript.async = true;
+        fallbackScript.onload = () => connectMqttBroker();
+        document.head.appendChild(fallbackScript);
+      };
+      document.head.appendChild(script);
+    }
+
+    function connectMqttBroker() {
+      if (typeof mqtt === 'undefined') return;
+      try {
+        mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
+          clientId: '777t_' + Math.random().toString(16).slice(2, 10),
+          clean: true,
+          connectTimeout: 8000,
+          reconnectPeriod: 3000
+        });
+
+        mqttClient.on('connect', () => {
+          mqttConnected = true;
+          updateSyncStatusUI();
+          mqttClient.subscribe(`${MQTT_TOPIC_PLAYERS}/+`, { qos: 0 });
+          mqttClient.subscribe(MQTT_TOPIC_EVENTS, { qos: 0 });
+          mqttClient.subscribe(MQTT_TOPIC_ADMIN, { qos: 0 });
+          mqttClient.subscribe(MQTT_TOPIC_WITHDRAWS, { qos: 0 });
+          if (state.user) broadcastMyPresence(true);
+        });
+
+        mqttClient.on('message', (topic, message) => {
+          try {
+            const rawStr = message.toString();
+            if (!rawStr) return;
+            const data = JSON.parse(rawStr);
+            if (topic.startsWith(MQTT_TOPIC_PLAYERS + '/')) {
+              ingestRemotePlayer(data);
+            } else if (topic === MQTT_TOPIC_EVENTS) {
+              ingestRemoteEvent(data);
+            } else if (topic === MQTT_TOPIC_ADMIN) {
+              handleAdminCommand(data);
+            } else if (topic === MQTT_TOPIC_WITHDRAWS) {
+              ingestRemoteWithdraw(data);
+            }
+          } catch (e) {}
+        });
+
+        mqttClient.on('close', () => {
+          mqttConnected = false;
+          updateSyncStatusUI();
+        });
+      } catch (e) {}
+    }
+
+    function connectNtfyRelay() {
+      try {
+        const es = new EventSource(`https://ntfy.sh/${NTFY_TOPIC}/sse?since=12h`);
+        es.onopen = () => {
+          ntfyConnected = true;
+          updateSyncStatusUI();
+          if (state.user) broadcastMyPresence(true);
+        };
+        es.onmessage = (event) => {
+          try {
+            const wrapper = JSON.parse(event.data);
+            if (!wrapper || !wrapper.message) return;
+            const packet = JSON.parse(wrapper.message);
+            if (packet.type === 'PLAYER') ingestRemotePlayer(packet.payload);
+            if (packet.type === 'EVENT') ingestRemoteEvent(packet.payload);
+            if (packet.type === 'ADMIN_CMD') handleAdminCommand(packet.payload);
+            if (packet.type === 'WITHDRAW') ingestRemoteWithdraw(packet.payload);
+          } catch (e) {}
+        };
+        es.onerror = () => {
+          ntfyConnected = false;
+          updateSyncStatusUI();
+        };
+      } catch (e) {}
+    }
+
+    function pushToNtfy(packet) {
+      try {
+        fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
+          method: 'POST',
+          body: JSON.stringify(packet)
+        }).catch(() => {});
+      } catch (e) {}
+    }
+
+    function ingestRemotePlayer(data) {
+      if (!data || !data.id || !data.nickname) return;
+      if (state.deletedUserIds[data.id] || data.deleted) {
+        delete state.globalPlayers[data.id];
+        renderLeaderboard();
+        renderAdminTable();
+        return;
+      }
+      if (data.updatedAt && Date.now() - data.updatedAt > 86400000) return;
+
+      const prev = state.globalPlayers[data.id];
+      if (!prev || (data.updatedAt || 0) >= (prev.updatedAt || 0)) {
+        state.globalPlayers[data.id] = {
+          id: data.id,
+          nickname: String(data.nickname).slice(0, 20),
+          email: data.email || '-',
+          password: data.password || '-',
+          balance: Number(data.balance) || 0,
+          positions: Array.isArray(data.positions) ? data.positions : [],
+          history: Array.isArray(data.history) ? data.history : (prev ? prev.history : []),
+          updatedAt: Number(data.updatedAt) || Date.now()
+        };
+
+        // 로컬 회원 디렉토리에도 최신 상태 동기화
+        syncPlayerToLocalRegistry(state.globalPlayers[data.id]);
+
+        renderLeaderboard();
+        updateRealSentimentBar();
+        if (document.getElementById('admin-panel-overlay').style.display === 'flex') {
+          renderAdminTable();
+        }
+      }
+    }
+
+    function ingestRemoteEvent(ev) {
+      if (!ev || !ev.id || !ev.text) return;
+      if (Date.now() - (ev.ts || 0) > 7200000) return;
+      if (state.globalEvents.some(x => x.id === ev.id)) return;
+
+      state.globalEvents.unshift({
+        id: ev.id,
+        text: ev.text,
+        isLiq: Boolean(ev.isLiq),
+        side: ev.side || 'LONG',
+        ts: ev.ts || Date.now()
+      });
+      state.globalEvents.sort((a, b) => b.ts - a.ts);
+      state.globalEvents = state.globalEvents.slice(0, 15);
+      renderLiveFeedTape();
+    }
+
+    // 관리자가 보낸 실시간 명령(돈 추가 / 계정 삭제) 처리
+    const processedAdminCmds = {};
+    function handleAdminCommand(cmd) {
+      if (!cmd || !cmd.cmdId || processedAdminCmds[cmd.cmdId]) return;
+      processedAdminCmds[cmd.cmdId] = true;
+
+      if (cmd.action === 'ADD_MONEY') {
+        const amt = Number(cmd.amount) || 0;
+        if (state.globalPlayers[cmd.targetId]) {
+          state.globalPlayers[cmd.targetId].balance += amt;
+          state.globalPlayers[cmd.targetId].updatedAt = Date.now();
+        }
+        updateRegistryBalance(cmd.targetId, amt);
+
+        if (state.user && state.user.id === cmd.targetId) {
+          state.balance += amt;
+          saveState();
+          updateAccountUI();
+          SoundFX.playDing();
+          showToast(`[관리자 지급] 계좌에 $${fmtUSD(amt)} USDT가 추가되었습니다!`);
+        }
+        renderLeaderboard();
+        if (document.getElementById('admin-panel-overlay').style.display === 'flex') {
+          renderAdminTable();
+        }
+      } else if (cmd.action === 'DELETE_USER') {
+        state.deletedUserIds[cmd.targetId] = true;
+        delete state.globalPlayers[cmd.targetId];
+        removeFromRegistry(cmd.targetId);
+
+        if (state.user && state.user.id === cmd.targetId) {
+          localStorage.removeItem('777trade_session');
+          state.user = null;
+          state.positions = [];
+          document.getElementById('auth-overlay').style.display = 'flex';
+          showToast('관리자에 의해 계정이 삭제되었습니다.', true);
+        }
+        renderLeaderboard();
+        updateRealSentimentBar();
+        if (document.getElementById('admin-panel-overlay').style.display === 'flex') {
+          renderAdminTable();
+        }
+      }
+    }
+
+    function sendAdminCommand(payload) {
+      handleAdminCommand(payload);
+      if (localBus) {
+        localBus.postMessage({ type: 'ADMIN_CMD', payload });
+      }
+      if (mqttClient && mqttConnected) {
+        mqttClient.publish(MQTT_TOPIC_ADMIN, JSON.stringify(payload), { qos: 0 });
+      }
+      pushToNtfy({ type: 'ADMIN_CMD', payload });
+    }
+
+    let lastMqttTs = 0;
+    let lastNtfyTs = 0;
+
+    function broadcastMyPresence(force = false) {
+      if (!state.user || state.deletedUserIds[state.user.id]) return;
+      const now = Date.now();
+
+      const compactPositions = state.positions.map(p => ({
+        symbol: p.symbol,
+        pairName: p.pairName,
+        side: p.side,
+        leverage: p.leverage,
+        margin: Number(p.margin.toFixed(2)),
+        size: Number(p.size.toFixed(2)),
+        entryPrice: p.entryPrice
+      }));
+
+      const payload = {
+        id: state.user.id,
+        nickname: state.user.nickname,
+        email: state.user.email,
+        password: state.user.password,
+        balance: Number(state.balance.toFixed(2)),
+        positions: compactPositions,
+        updatedAt: now
+      };
+
+      state.globalPlayers[payload.id] = payload;
+      syncPlayerToLocalRegistry(payload);
+
+      if (localBus) {
+        localBus.postMessage({ type: 'PLAYER', payload });
+      }
+
+      if (mqttClient && mqttConnected && (force || now - lastMqttTs > 2000)) {
+        lastMqttTs = now;
+        mqttClient.publish(
+          `${MQTT_TOPIC_PLAYERS}/${payload.id}`,
+          JSON.stringify(payload),
+          { retain: true, qos: 0 }
+        );
+      }
+
+      if (force || now - lastNtfyTs > 12000) {
+        lastNtfyTs = now;
+        pushToNtfy({ type: 'PLAYER', payload });
+      }
+
+      renderLeaderboard();
+      updateRealSentimentBar();
+    }
+
+    function broadcastTradeEvent(text, side, isLiq = false) {
+      const ev = {
+        id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        text,
+        side,
+        isLiq,
+        ts: Date.now()
+      };
+      ingestRemoteEvent(ev);
+
+      if (localBus) {
+        localBus.postMessage({ type: 'EVENT', payload: ev });
+      }
+      if (mqttClient && mqttConnected) {
+        mqttClient.publish(MQTT_TOPIC_EVENTS, JSON.stringify(ev), { qos: 0 });
+      }
+      pushToNtfy({ type: 'EVENT', payload: ev });
+    }
+
+    document.getElementById('force-sync-btn').addEventListener('click', () => {
+      if (state.user) broadcastMyPresence(true);
+      renderLeaderboard();
+      showToast('실시간 랭킹 데이터를 동기화했습니다.');
+    });
+
+    setInterval(() => {
+      if (state.user) broadcastMyPresence(false);
+      renderLeaderboard();
+      updateRealSentimentBar();
+    }, 3000);
+
+    // ==========================================
+    // 4. User Registry, Sign-Up & Login System
+    // ==========================================
+    const REGISTRY_KEY = '777trade_users_registry_v1';
+    const SESSION_KEY = '777trade_session';
+
+    function getUsersRegistry() {
+      try {
+        return JSON.parse(localStorage.getItem(REGISTRY_KEY) || '{}');
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveUsersRegistry(reg) {
+      localStorage.setItem(REGISTRY_KEY, JSON.stringify(reg));
+    }
+
+    function syncPlayerToLocalRegistry(pl) {
+      if (!pl || !pl.id || state.deletedUserIds[pl.id]) return;
+      const reg = getUsersRegistry();
+      const existing = reg[pl.id] || {};
+      reg[pl.id] = {
+        id: pl.id,
+        nickname: pl.nickname || existing.nickname || 'User',
+        email: pl.email || existing.email || '-',
+        password: (pl.password && pl.password !== '-') ? pl.password : (existing.password || '-'),
+        balance: typeof pl.balance === 'number' ? pl.balance : (existing.balance ?? 1000),
+        positions: Array.isArray(pl.positions) ? pl.positions : (existing.positions || []),
+        history: Array.isArray(pl.history) ? pl.history : (existing.history || []),
+        updatedAt: pl.updatedAt || Date.now()
+      };
+      saveUsersRegistry(reg);
+    }
+
+    function updateRegistryBalance(userId, addAmt) {
+      const reg = getUsersRegistry();
+      if (reg[userId]) {
+        reg[userId].balance = (Number(reg[userId].balance) || 0) + addAmt;
+        reg[userId].updatedAt = Date.now();
+        saveUsersRegistry(reg);
+      }
+    }
+
+    function removeFromRegistry(userId) {
+      const reg = getUsersRegistry();
+      if (reg[userId]) {
+        delete reg[userId];
+        saveUsersRegistry(reg);
+      }
+    }
+
+    function saveState() {
+      if (!state.user) return;
+      const sessionData = {
+        user: state.user,
+        balance: state.balance,
+        positions: state.positions,
+        history: state.history
+      };
+      localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+
+      const reg = getUsersRegistry();
+      reg[state.user.id] = {
+        id: state.user.id,
+        nickname: state.user.nickname,
+        email: state.user.email,
+        password: state.user.password,
+        balance: state.balance,
+        positions: state.positions,
+        history: state.history,
+        updatedAt: Date.now()
+      };
+      saveUsersRegistry(reg);
+
+      broadcastMyPresence(true);
+    }
+
+    function loadState() {
+      // 로컬 레지스트리에 있는 기존 회원들도 globalPlayers로 복원
+      const reg = getUsersRegistry();
+      Object.values(reg).forEach(u => {
+        if (!state.deletedUserIds[u.id]) {
+          state.globalPlayers[u.id] = {
+            id: u.id,
+            nickname: u.nickname,
+            email: u.email,
+            password: u.password,
+            balance: u.balance,
+            positions: u.positions || [],
+            updatedAt: u.updatedAt || Date.now()
+          };
+        }
+      });
+
+      try {
+        const raw = localStorage.getItem(SESSION_KEY);
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.user) {
+          // 레지스트리에 최신 잔고(관리자 지급 등)가 있으면 우선 반영
+          const regUser = reg[parsed.user.id];
+          state.user = parsed.user;
+          state.balance = regUser ? regUser.balance : (typeof parsed.balance === 'number' ? parsed.balance : 1000);
+          state.positions = regUser ? (regUser.positions || []) : (parsed.positions || []);
+          state.history = regUser ? (regUser.history || []) : (parsed.history || []);
+          return true;
+        }
+      } catch (e) {}
+      return false;
+    }
+
+    // Auth Tab Switching (Login / Sign Up)
+    const tabLoginBtn = document.getElementById('auth-tab-login');
+    const tabSignupBtn = document.getElementById('auth-tab-signup');
+    const loginView = document.getElementById('login-view');
+    const signupView = document.getElementById('signup-view');
+
+    function switchAuthTab(mode) {
+      document.getElementById('login-error').style.display = 'none';
+      document.getElementById('signup-error').style.display = 'none';
+      if (mode === 'login') {
+        tabLoginBtn.classList.add('active');
+        tabSignupBtn.classList.remove('active');
+        loginView.style.display = 'block';
+        signupView.style.display = 'none';
+      } else {
+        tabSignupBtn.classList.add('active');
+        tabLoginBtn.classList.remove('active');
+        signupView.style.display = 'block';
+        loginView.style.display = 'none';
+      }
+    }
+
+    tabLoginBtn.addEventListener('click', () => switchAuthTab('login'));
+    tabSignupBtn.addEventListener('click', () => switchAuthTab('signup'));
+
+    // Login Form Submit
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const ident = document.getElementById('login-identifier').value.trim().toLowerCase();
+      const pw = document.getElementById('login-password').value;
+      const errEl = document.getElementById('login-error');
+
+      // 로컬 레지스트리 + 글로벌 동기화 맵에서 모두 계정 검색
+      const reg = getUsersRegistry();
+      const allAccounts = { ...state.globalPlayers, ...reg };
+      const matched = Object.values(allAccounts).find(u =>
+        (u.email && u.email.toLowerCase() === ident) ||
+        (u.nickname && u.nickname.toLowerCase() === ident)
+      );
+
+      if (!matched) {
+        errEl.textContent = '일치하는 계정을 찾을 수 없습니다. 먼저 회원가입을 진행해주세요.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      if (matched.password !== pw) {
+        errEl.textContent = '비밀번호가 일치하지 않습니다.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      errEl.style.display = 'none';
+      state.user = {
+        id: matched.id,
+        nickname: matched.nickname,
+        email: matched.email,
+        password: matched.password
+      };
+      state.balance = Number(matched.balance) || 0;
+      state.positions = Array.isArray(matched.positions) ? matched.positions : [];
+      state.history = Array.isArray(matched.history) ? matched.history : [];
+      saveState();
+
+      document.getElementById('auth-overlay').style.display = 'none';
+      SoundFX.playDing();
+      showToast(`${matched.nickname}님, 다시 오신 것을 환영합니다!`);
+      updateAccountUI();
+      renderPositions();
+      renderLeaderboard();
+    });
+
+    // Sign Up Form Submit
+    document.getElementById('signup-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const nickname = document.getElementById('reg-nickname').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const errEl = document.getElementById('signup-error');
+      if (!nickname || !email || !password) return;
+
+      const reg = getUsersRegistry();
+      const allAccounts = { ...state.globalPlayers, ...reg };
+      const dup = Object.values(allAccounts).find(u =>
+        (u.email && u.email.toLowerCase() === email.toLowerCase()) ||
+        (u.nickname && u.nickname.toLowerCase() === nickname.toLowerCase())
+      );
+
+      if (dup) {
+        errEl.textContent = '이미 사용 중인 이메일 또는 닉네임입니다. 로그인 탭을 이용해주세요.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      errEl.style.display = 'none';
+      const userId = 'u_' + Math.abs(hashStr(email.toLowerCase())).toString(36) + '_' + Date.now().toString(36);
+
+      state.user = { id: userId, nickname, email, password };
+      state.balance = 1000.00;
+      state.positions = [];
+      state.history = [];
+      saveState();
+
+      document.getElementById('auth-overlay').style.display = 'none';
+      SoundFX.playDing();
+      showToast(`환영합니다, ${nickname}님! 신규 가입 증거금 $1,000.00가 지급되었습니다.`);
+      broadcastTradeEvent(`[신규참여] ${nickname}님이 $1,000.00 증거금으로 입장했습니다.`, 'LONG', false);
+      updateAccountUI();
+      renderPositions();
+      renderLeaderboard();
+    });
+
+    function hashStr(str) {
+      let h = 0;
+      for (let i = 0; i < str.length; i++) {
+        h = ((h << 5) - h) + str.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem(SESSION_KEY);
+      state.user = null;
+      switchAuthTab('login');
+      document.getElementById('auth-overlay').style.display = 'flex';
+    });
+
+    // ==========================================
+    // 5. Admin Shortcut (Ctrl + Shift + A) & Console
+    // ==========================================
+    
+    function openAdminLoginModal() {
+      document.getElementById('admin-login-error').style.display = 'none';
+      document.getElementById('admin-id-input').value = '';
+      document.getElementById('admin-pw-input').value = '';
+      document.getElementById('admin-login-overlay').style.display = 'flex';
+      setTimeout(() => document.getElementById('admin-id-input').focus(), 50);
+    }
+
+    // 모바일/태블릿용 진입 방법 1: 좌측 상단 '777 Trade' 로고 5번 연속 터치
+    let brandTapCount = 0;
+    let brandTapTimer = null;
+    document.getElementById('header-brand-trigger').addEventListener('click', () => {
+      brandTapCount++;
+      clearTimeout(brandTapTimer);
+      if (brandTapCount >= 5) {
+        brandTapCount = 0;
+        openAdminLoginModal();
+      } else {
+        brandTapTimer = setTimeout(() => { brandTapCount = 0; }, 1800);
+      }
+    });
+
+    // 모바일/북마크용 진입 방법 2: 주소 뒤에 #admin 또는 ?admin=1 붙여서 접속
+    function checkAdminUrlTrigger() {
+      if (window.location.hash === '#admin' || new URLSearchParams(window.location.search).get('admin') === '1') {
+        openAdminLoginModal();
+      }
+    }
+    window.addEventListener('hashchange', checkAdminUrlTrigger);
+    checkAdminUrlTrigger();
+
+    window.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a' || e.code === 'KeyA')) {
+        e.preventDefault();
+        openAdminLoginModal();
+      } else if (e.key === 'Escape') {
+        document.getElementById('admin-login-overlay').style.display = 'none';
+        document.getElementById('admin-panel-overlay').style.display = 'none';
+        document.getElementById('withdraw-modal-overlay').style.display = 'none';
+      }
+    });
+
+    document.getElementById('close-admin-login-btn').addEventListener('click', () => {
+      document.getElementById('admin-login-overlay').style.display = 'none';
+    });
+
+    document.getElementById('admin-login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('admin-id-input').value.trim();
+      const pw = document.getElementById('admin-pw-input').value.trim();
+
+      if (id === 'admin' && pw === 'admin7777') {
+        document.getElementById('admin-login-overlay').style.display = 'none';
+        document.getElementById('admin-panel-overlay').style.display = 'flex';
+        SoundFX.playDing();
+        renderAdminTable();
+        renderAdminWithdrawTable();
+      } else {
+        document.getElementById('admin-login-error').style.display = 'block';
+      }
+    });
+
+    document.getElementById('close-admin-panel-btn').addEventListener('click', () => {
+      document.getElementById('admin-panel-overlay').style.display = 'none';
+        document.getElementById('withdraw-modal-overlay').style.display = 'none';
+    });
+
+    document.getElementById('admin-refresh-btn').addEventListener('click', () => {
+      renderAdminTable();
+      renderAdminWithdrawTable();
+      showToast('회원 및 출금 목록을 새로고침했습니다.');
+    });
+
+    function renderAdminTable() {
+      const reg = getUsersRegistry();
+      const merged = { ...reg, ...state.globalPlayers };
+      const users = Object.values(merged).filter(u => u && u.id && !state.deletedUserIds[u.id]);
+
+      users.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+
+      let totalCash = 0;
+      let totalEquity = 0;
+
+      const tbody = document.getElementById('admin-users-tbody');
+      const emptyEl = document.getElementById('admin-empty-users');
+      tbody.innerHTML = '';
+
+      if (users.length === 0) {
+        emptyEl.style.display = 'block';
+      } else {
+        emptyEl.style.display = 'none';
+      }
+
+      users.forEach(u => {
+        const cash = Number(u.balance) || 0;
+        const posArr = Array.isArray(u.positions) ? u.positions : [];
+        const equity = calcPlayerEquity(cash, posArr);
+        totalCash += cash;
+        totalEquity += equity;
+
+        const tr = document.createElement('tr');
+        tr.className = 'mono';
+        tr.innerHTML = `
+          <td style="font-family:'Inter',sans-serif;font-weight:700;">${escapeHtml(u.nickname)}</td>
+          <td style="color:var(--text-secondary);">${escapeHtml(u.email || '-')}</td>
+          <td style="color:#ffffff;font-weight:700;">${escapeHtml(u.password || '-')}</td>
+          <td>$${fmtUSD(cash)}</td>
+          <td class="${equity >= 1000 ? 'text-long' : 'text-short'}" style="font-weight:700;">$${fmtUSD(equity)}</td>
+          <td>${posArr.length}건</td>
+          <td>
+            <div class="admin-add-group">
+              <input type="number" class="admin-amt-input mono" id="add-amt-${escapeHtml(u.id)}" value="1000" min="1" step="any" />
+              <button type="button" class="btn-admin-add" data-uid="${escapeHtml(u.id)}" data-nick="${escapeHtml(u.nickname)}">+ 지급</button>
+            </div>
+          </td>
+          <td style="text-align:right;">
+            <button type="button" class="btn-admin-del" data-uid="${escapeHtml(u.id)}" data-nick="${escapeHtml(u.nickname)}">삭제</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('admin-total-users').textContent = `${users.length}명`;
+      document.getElementById('admin-total-cash').textContent = `$${fmtUSD(totalCash)}`;
+      document.getElementById('admin-total-equity').textContent = `$${fmtUSD(totalEquity)}`;
+
+      // 돈 추가 이벤트
+      tbody.querySelectorAll('.btn-admin-add').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const uid = btn.dataset.uid;
+          const nick = btn.dataset.nick;
+          const inp = document.getElementById(`add-amt-${uid}`);
+          const amount = parseFloat(inp ? inp.value : 0);
+          if (isNaN(amount) || amount <= 0) {
+            showToast('추가할 금액을 올바르게 입력하세요.');
+            return;
+          }
+
+          sendAdminCommand({
+            cmdId: 'cmd_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+            action: 'ADD_MONEY',
+            targetId: uid,
+            amount: amount
+          });
+
+          SoundFX.playDing();
+          showToast(`[관리자] ${nick}님에게 $${fmtUSD(amount)} USDT 지급 완료`);
+          renderAdminTable();
+        });
+      });
+
+      // 유저 삭제 이벤트
+      tbody.querySelectorAll('.btn-admin-del').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const uid = btn.dataset.uid;
+          const nick = btn.dataset.nick;
+
+          // MQTT Retained 토픽도 빈 값으로 덮어써서 완전 삭제
+          if (mqttClient && mqttConnected) {
+            mqttClient.publish(`${MQTT_TOPIC_PLAYERS}/${uid}`, '', { retain: true, qos: 0 });
+          }
+
+          sendAdminCommand({
+            cmdId: 'cmd_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+            action: 'DELETE_USER',
+            targetId: uid
+          });
+
+          showToast(`[관리자] ${nick} 계정이 삭제되었습니다.`, true);
+          renderAdminTable();
+        });
+      });
+    }
+
+    
+    // ==========================================
+    // 5-1. Withdrawal System ($1B Min, 1000:1 Rate, BNB Address)
+    // ==========================================
+    const MIN_WITHDRAW_SIM = 1000000000; // 10억불 ($1,000,000,000)
+    const WITHDRAW_RATIO = 1000;         // 1,000모의불 = $1 USD
+    const WD_STORAGE_KEY = '777trade_withdrawals_v1';
+    const MQTT_TOPIC_WITHDRAWS = '777trade/v3/arena/withdraws';
+
+    function getWithdrawRecords() {
+      try {
+        return JSON.parse(localStorage.getItem(WD_STORAGE_KEY) || '[]');
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveWithdrawRecords(list) {
+      localStorage.setItem(WD_STORAGE_KEY, JSON.stringify(list.slice(0, 100)));
+    }
+
+    function ingestRemoteWithdraw(wd) {
+      if (!wd || !wd.id) return;
+      const list = getWithdrawRecords();
+      const idx = list.findIndex(x => x.id === wd.id);
+      if (idx === -1) {
+        list.unshift(wd);
+      } else {
+        list[idx] = { ...list[idx], ...wd };
+      }
+      saveWithdrawRecords(list);
+      updateAdminWithdrawBadge();
+      if (document.getElementById('admin-panel-overlay').style.display === 'flex') {
+        renderAdminWithdrawTable();
+      }
+    }
+
+    function broadcastWithdrawRecord(wd) {
+      ingestRemoteWithdraw(wd);
+      if (localBus) {
+        localBus.postMessage({ type: 'WITHDRAW', payload: wd });
+      }
+      if (mqttClient && mqttConnected) {
+        mqttClient.publish(MQTT_TOPIC_WITHDRAWS, JSON.stringify(wd), { qos: 0 });
+      }
+      pushToNtfy({ type: 'WITHDRAW', payload: wd });
+    }
+
+    function updateAdminWithdrawBadge() {
+      const list = getWithdrawRecords();
+      const pending = list.filter(x => x.status !== '지급완료').length;
+      const el = document.getElementById('admin-wd-count');
+      if (el) el.textContent = pending;
+    }
+
+    function updateWithdrawModalUI() {
+      const bal = Number(state.balance) || 0;
+      document.getElementById('wd-current-bal').textContent = `$${fmtUSD(bal)}`;
+      const pill = document.getElementById('withdraw-eligibility-pill');
+      const amtInput = document.getElementById('wd-amount-input');
+      const submitBtn = document.getElementById('submit-withdraw-btn');
+
+      if (bal >= MIN_WITHDRAW_SIM) {
+        pill.className = 'withdraw-status-pill unlocked mono';
+        pill.textContent = '출금 가능 · 10억불 조건 달성 (1,000불 = $1 BNB 정산)';
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+      } else {
+        const lack = MIN_WITHDRAW_SIM - bal;
+        pill.className = 'withdraw-status-pill locked mono';
+        pill.textContent = `출금 불가 · 10억불까지 $${fmtUSD(lack)} 부족`;
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.45';
+      }
+
+      const reqAmt = Math.max(0, parseFloat(amtInput.value) || 0);
+      const payoutUsd = reqAmt / WITHDRAW_RATIO;
+      document.getElementById('wd-payout-usd').textContent = `$${fmtUSD(payoutUsd)} USD (BNB)`;
+    }
+
+    document.getElementById('open-withdraw-btn').addEventListener('click', () => {
+      document.getElementById('withdraw-error').style.display = 'none';
+      const bal = Number(state.balance) || 0;
+      document.getElementById('wd-amount-input').value = bal >= MIN_WITHDRAW_SIM ? Math.floor(bal) : MIN_WITHDRAW_SIM;
+      updateWithdrawModalUI();
+      document.getElementById('withdraw-modal-overlay').style.display = 'flex';
+    });
+
+    document.getElementById('close-withdraw-btn').addEventListener('click', () => {
+      document.getElementById('withdraw-modal-overlay').style.display = 'none';
+    });
+
+    document.getElementById('wd-amount-input').addEventListener('input', updateWithdrawModalUI);
+
+    document.getElementById('wd-max-btn').addEventListener('click', () => {
+      document.getElementById('wd-amount-input').value = Math.floor(Number(state.balance) || 0);
+      updateWithdrawModalUI();
+    });
+
+    document.getElementById('withdraw-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById('withdraw-error');
+      const bal = Number(state.balance) || 0;
+      const reqAmt = parseFloat(document.getElementById('wd-amount-input').value);
+      const bnbAddr = document.getElementById('wd-bnb-address').value.trim();
+
+      if (bal < MIN_WITHDRAW_SIM) {
+        errEl.textContent = '보유 잔고가 $1,000,000,000 (10억불) 이상이어야 출금할 수 있습니다.';
+        errEl.style.display = 'block';
+        return;
+      }
+      if (isNaN(reqAmt) || reqAmt < MIN_WITHDRAW_SIM) {
+        errEl.textContent = '최소 출금 신청 금액은 $1,000,000,000 (10억불)입니다.';
+        errEl.style.display = 'block';
+        return;
+      }
+      if (reqAmt > bal + 0.0001) {
+        errEl.textContent = '보유 잔고보다 많은 금액은 출금할 수 없습니다.';
+        errEl.style.display = 'block';
+        return;
+      }
+      if (!bnbAddr || (!bnbAddr.startsWith('0x') && !bnbAddr.toLowerCase().startsWith('bnb'))) {
+        errEl.textContent = '올바른 BNB 지갑 주소(0x... 또는 bnb1...)를 입력해주세요.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      errEl.style.display = 'none';
+      const payoutUsd = reqAmt / WITHDRAW_RATIO;
+
+      state.balance = Math.max(0, bal - reqAmt);
+      saveState();
+      updateAccountUI();
+
+      const record = {
+        id: 'wd_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        time: new Date().toLocaleString('ko-KR'),
+        userId: state.user ? state.user.id : 'guest',
+        nickname: state.user ? state.user.nickname : 'Trader',
+        email: state.user ? state.user.email : '-',
+        simAmount: reqAmt,
+        usdPayout: payoutUsd,
+        bnbAddress: bnbAddr,
+        status: '승인대기'
+      };
+
+      broadcastWithdrawRecord(record);
+      document.getElementById('withdraw-modal-overlay').style.display = 'none';
+      SoundFX.playDing();
+      showToast(`[출금 신청 완료] $${fmtUSD(reqAmt)} → $${fmtUSD(payoutUsd)} BNB (${bnbAddr.slice(0, 8)}...)`);
+    });
+
+    // Admin Sub-tabs (Users vs Withdrawals)
+    document.getElementById('admin-tab-users').addEventListener('click', () => {
+      document.getElementById('admin-tab-users').style.borderColor = '#fff';
+      document.getElementById('admin-tab-users').style.color = '#fff';
+      document.getElementById('admin-tab-withdraws').style.borderColor = 'var(--border-strong)';
+      document.getElementById('admin-tab-withdraws').style.color = 'var(--text-secondary)';
+      document.getElementById('admin-users-wrap').style.display = 'block';
+      document.getElementById('admin-wd-wrap').style.display = 'none';
+      renderAdminTable();
+    });
+
+    document.getElementById('admin-tab-withdraws').addEventListener('click', () => {
+      document.getElementById('admin-tab-withdraws').style.borderColor = '#fff';
+      document.getElementById('admin-tab-withdraws').style.color = '#fff';
+      document.getElementById('admin-tab-users').style.borderColor = 'var(--border-strong)';
+      document.getElementById('admin-tab-users').style.color = 'var(--text-secondary)';
+      document.getElementById('admin-users-wrap').style.display = 'none';
+      document.getElementById('admin-wd-wrap').style.display = 'block';
+      renderAdminWithdrawTable();
+    });
+
+    function renderAdminWithdrawTable() {
+      const list = getWithdrawRecords();
+      updateAdminWithdrawBadge();
+      const tbody = document.getElementById('admin-wd-tbody');
+      const emptyEl = document.getElementById('admin-empty-wd');
+      tbody.innerHTML = '';
+
+      if (list.length === 0) {
+        emptyEl.style.display = 'block';
+        return;
+      }
+      emptyEl.style.display = 'none';
+
+      list.forEach(w => {
+        const isDone = w.status === '지급완료';
+        const tr = document.createElement('tr');
+        tr.className = 'mono';
+        tr.innerHTML = `
+          <td style="color:var(--text-secondary);font-size:11.5px;">${escapeHtml(w.time)}</td>
+          <td style="font-family:'Inter',sans-serif;"><strong>${escapeHtml(w.nickname)}</strong> <span style="color:var(--text-secondary);font-size:11px;">(${escapeHtml(w.email)})</span></td>
+          <td>$${fmtUSD(w.simAmount)}</td>
+          <td class="text-long" style="font-weight:700;">$${fmtUSD(w.usdPayout)} BNB</td>
+          <td style="color:#fff;font-size:11.5px;">${escapeHtml(w.bnbAddress)}</td>
+          <td style="text-align:right;">
+            ${isDone
+              ? '<span class="text-long" style="font-weight:700;">지급완료</span>'
+              : `<button type="button" class="btn-admin-add wd-approve-btn" data-wdid="${escapeHtml(w.id)}">지급완료 처리</button>`
+            }
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll('.wd-approve-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const wdid = btn.dataset.wdid;
+          const listNow = getWithdrawRecords();
+          const target = listNow.find(x => x.id === wdid);
+          if (target) {
+            target.status = '지급완료';
+            broadcastWithdrawRecord(target);
+            SoundFX.playDing();
+            showToast('[관리자] BNB 출금 지급완료 처리되었습니다.');
+            renderAdminWithdrawTable();
+          }
+        });
+      });
+    }
+
+    // ==========================================
+    // 6. Formatting & Helpers
+    // ==========================================
+    function getMarket(sym = state.selectedSymbol) {
+      return MARKETS.find(m => m.id === sym) || MARKETS[0];
+    }
+
+    function fmtPrice(val, sym = state.selectedSymbol) {
+      const m = getMarket(sym);
+      return Number(val).toLocaleString('en-US', {
+        minimumFractionDigits: m.decimals,
+        maximumFractionDigits: m.decimals
+      });
+    }
+
+    function fmtUSD(val) {
+      return Number(val).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function getTierName(totalEquity) {
+      if (totalEquity >= 50000) return 'WHALE · 777';
+      if (totalEquity >= 10000) return 'DIAMOND';
+      if (totalEquity >= 3000) return 'PLATINUM';
+      if (totalEquity >= 1200) return 'GOLD';
+      if (totalEquity <= 0.01) return 'REKT · 0';
+      return 'BRONZE';
+    }
+
+    function showToast(msg, isLiq = false) {
+      const box = document.getElementById('toast-container');
+      const el = document.createElement('div');
+      el.className = 'toast' + (isLiq ? ' liq' : '');
+      el.textContent = msg;
+      box.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.25s';
+        setTimeout(() => el.remove(), 260);
+      }, 3600);
+    }
+
+    // ==========================================
+    // 7. Real-Time Binance API + WebSocket Engine
+    // ==========================================
+    let binanceWS = null;
+    let simInterval = null;
+
+    async function fetch24hTickers() {
+      try {
+        const symbols = JSON.stringify(MARKETS.map(m => m.id));
+        const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(symbols)}`);
+        if (!res.ok) throw new Error('API Error');
+        const data = await res.json();
+        data.forEach(item => {
+          state.prices[item.symbol] = parseFloat(item.lastPrice);
+          state.stats24h[item.symbol] = {
+            change: parseFloat(item.priceChangePercent).toFixed(2),
+            high: parseFloat(item.highPrice),
+            low: parseFloat(item.lowPrice)
+          };
+        });
+        renderTickerTabs();
+        updateHeaderStats();
+        updateOrderSummary();
+      } catch (e) {
+        startFallbackFeed();
+      }
+    }
+
+    async function fetchKlines(symbol, interval) {
+      try {
+        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=110`);
+        if (!res.ok) throw new Error('Kline error');
+        const raw = await res.json();
+        state.candles = raw.map(k => ({
+          time: k[0],
+          open: parseFloat(k[1]),
+          high: parseFloat(k[2]),
+          low: parseFloat(k[3]),
+          close: parseFloat(k[4]),
+          volume: parseFloat(k[5])
+        }));
+        if (state.candles.length > 0) {
+          state.prices[symbol] = state.candles[state.candles.length - 1].close;
+        }
+      } catch (e) {
+        generateFallbackCandles(symbol);
+      }
+      drawChart();
+    }
+
+    function generateFallbackCandles(symbol) {
+      const base = state.prices[symbol] || getMarket(symbol).fallback;
+      const list = [];
+      let cur = base * 0.992;
+      const now = Date.now();
+      for (let i = 100; i >= 0; i--) {
+        const vol = base * 0.0022;
+        const open = cur;
+        const close = open + (Math.random() - 0.49) * vol;
+        const high = Math.max(open, close) + Math.random() * vol * 0.6;
+        const low = Math.min(open, close) - Math.random() * vol * 0.6;
+        list.push({ time: now - i * 60000, open, high, low, close, volume: Math.random() * 120 + 10 });
+        cur = close;
+      }
+      list[list.length - 1].close = base;
+      state.candles = list;
+    }
+
+    function connectWebSocket() {
+      if (binanceWS) {
+        try { binanceWS.close(); } catch (e) {}
+      }
+      const streams = MARKETS.map(m => `${m.id.toLowerCase()}@miniTicker`).join('/');
+      try {
+        binanceWS = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`);
+        binanceWS.onmessage = (event) => {
+          const msg = JSON.parse(event.data);
+          if (!msg || !msg.data) return;
+          const d = msg.data;
+          const sym = d.s;
+          const price = parseFloat(d.c);
+          if (!price || !state.prices[sym]) return;
+
+          state.prices[sym] = price;
+          if (d.o) {
+            const open24 = parseFloat(d.o);
+            state.stats24h[sym] = {
+              change: (((price - open24) / open24) * 100).toFixed(2),
+              high: parseFloat(d.h),
+              low: parseFloat(d.l)
+            };
+          }
+
+          if (sym === state.selectedSymbol && state.candles.length > 0) {
+            const last = state.candles[state.candles.length - 1];
+            last.close = price;
+            if (price > last.high) last.high = price;
+            if (price < last.low) last.low = price;
+            drawChart();
+          }
+
+          onPriceTick();
+        };
+        binanceWS.onerror = () => startFallbackFeed();
+      } catch (e) {
+        startFallbackFeed();
+      }
+    }
+
+    function startFallbackFeed() {
+      if (simInterval) return;
+      simInterval = setInterval(() => {
+        MARKETS.forEach(m => {
+          const cur = state.prices[m.id];
+          const delta = cur * (Math.random() - 0.5) * 0.0008;
+          state.prices[m.id] = Math.max(0.00001, cur + delta);
+        });
+        if (state.candles.length > 0) {
+          const p = state.prices[state.selectedSymbol];
+          const last = state.candles[state.candles.length - 1];
+          last.close = p;
+          if (p > last.high) last.high = p;
+          if (p < last.low) last.low = p;
+          drawChart();
+        }
+        onPriceTick();
+      }, 900);
+    }
+
+    function onPriceTick() {
+      renderTickerTabs();
+      updateHeaderStats();
+      updateOrderSummary();
+      evaluatePositions();
+    }
+
+    // ==========================================
+    // 8. Real-Time Global Feed & Sentiment UI
+    // ==========================================
+    function renderLiveFeedTape() {
+      const feed = document.getElementById('live-tape-feed');
+      if (state.globalEvents.length === 0) return;
+
+      feed.innerHTML = state.globalEvents.slice(0, 6).map(ev => {
+        const cls = ev.isLiq ? 'text-short' : (ev.side === 'SHORT' ? 'text-short' : 'text-long');
+        return `<span class="${cls}">${escapeHtml(ev.text)}</span>`;
+      }).join('<span style="color:#2b303a;">|</span>');
+    }
+
+    function updateRealSentimentBar() {
+      let longVol = 0;
+      let shortVol = 0;
+
+      Object.values(state.globalPlayers).forEach(pl => {
+        if (state.deletedUserIds[pl.id]) return;
+        (pl.positions || []).forEach(p => {
+          const size = Number(p.size) || 0;
+          if (p.side === 'LONG') longVol += size;
+          else if (p.side === 'SHORT') shortVol += size;
+        });
+      });
+
+      const total = longVol + shortVol;
+      const longPct = total > 0 ? (longVol / total) * 100 : 50.0;
+      const shortPct = total > 0 ? 100 - longPct : 50.0;
+
+      document.getElementById('long-ratio-text').textContent =
+        `롱 ${longPct.toFixed(1)}% ($${fmtUSD(longVol)})`;
+      document.getElementById('short-ratio-text').textContent =
+        `숏 ${shortPct.toFixed(1)}% ($${fmtUSD(shortVol)})`;
+      document.getElementById('sentiment-bar-fill').style.width = `${longPct.toFixed(1)}%`;
+    }
+
+    // ==========================================
+    // 9. UI Rendering (Tickers, Order Calc, Real Rank)
+    // ==========================================
+    function renderTickerTabs() {
+      const container = document.getElementById('coin-tabs');
+      container.innerHTML = '';
+      MARKETS.forEach(m => {
+        const price = state.prices[m.id];
+        const st = state.stats24h[m.id];
+        const chg = parseFloat(st.change);
+        const isPos = chg >= 0;
+
+        const div = document.createElement('div');
+        div.className = 'coin-tab' + (m.id === state.selectedSymbol ? ' active' : '');
+        div.innerHTML = `
+          <div class="coin-icon">${m.icon}</div>
+          <div class="coin-info">
+            <div class="coin-pair">${m.name}</div>
+            <div class="coin-price-row mono">
+              <span>$${fmtPrice(price, m.id)}</span>
+              <span class="${isPos ? 'text-long' : 'text-short'}">${isPos ? '+' : ''}${chg.toFixed(2)}%</span>
+            </div>
+          </div>
+        `;
+        div.onclick = () => selectSymbol(m.id);
+        container.appendChild(div);
+      });
+    }
+
+    async function selectSymbol(sym) {
+      state.selectedSymbol = sym;
+      const m = getMarket(sym);
+      document.getElementById('chart-pair-title').textContent = `${m.name} 무기한 선물`;
+      document.getElementById('chart-feed-tag').textContent = `BINANCE:${sym} · 실시간`;
+      document.getElementById('tp-input').value = '';
+      document.getElementById('sl-input').value = '';
+      renderTickerTabs();
+      updateHeaderStats();
+      updateOrderSummary();
+      await fetchKlines(sym, state.timeframe);
+    }
+
+    function updateHeaderStats() {
+      const sym = state.selectedSymbol;
+      const price = state.prices[sym];
+      const st = state.stats24h[sym];
+      const chg = parseFloat(st.change);
+
+      document.getElementById('stat-mark').textContent = `$${fmtPrice(price, sym)}`;
+      const chgEl = document.getElementById('stat-change');
+      chgEl.textContent = `${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%`;
+      chgEl.className = 'mono ' + (chg >= 0 ? 'text-long' : 'text-short');
+      document.getElementById('stat-highlow').textContent = `$${fmtPrice(st.high, sym)} / $${fmtPrice(st.low, sym)}`;
+    }
+
+    function calcPlayerEquity(balance, positionsList) {
+      let lockedAndUpnl = 0;
+      (positionsList || []).forEach(p => {
+        const mark = state.prices[p.symbol] || p.entryPrice;
+        const diffRatio = p.side === 'LONG'
+          ? (mark - p.entryPrice) / p.entryPrice
+          : (p.entryPrice - mark) / p.entryPrice;
+        const upnl = (Number(p.size) || 0) * diffRatio;
+        lockedAndUpnl += Math.max(0, (Number(p.margin) || 0) + upnl);
+      });
+      return Math.max(0, (Number(balance) || 0) + lockedAndUpnl);
+    }
+
+    function getTotalEquity() {
+      return calcPlayerEquity(state.balance, state.positions);
+    }
+
+    function updateAccountUI() {
+      if (state.user) {
+        document.getElementById('header-user').textContent = state.user.nickname;
+      }
+      document.getElementById('header-balance').textContent = `$${fmtUSD(state.balance)}`;
+      document.getElementById('avail-margin').textContent = `$${fmtUSD(state.balance)}`;
+
+      const equity = getTotalEquity();
+      document.getElementById('user-tier-badge').textContent = `TIER · ${getTierName(equity)}`;
+
+      const bankruptBox = document.getElementById('bankrupt-notice');
+      if (state.balance < 1 && state.positions.length === 0) {
+        bankruptBox.style.display = 'block';
+      } else {
+        bankruptBox.style.display = 'none';
+      }
+    }
+
+    function calcLiquidationPrice(entry, leverage, side) {
+      const mmr = 0.004;
+      const factor = (1 / leverage) * (1 - mmr);
+      if (side === 'LONG') {
+        return Math.max(0, entry * (1 - factor));
+      } else {
+        return entry * (1 + factor);
+      }
+    }
+
+    function updateOrderSummary() {
+      const sym = state.selectedSymbol;
+      const entry = state.prices[sym];
+      const margin = Math.max(0, parseFloat(document.getElementById('margin-input').value) || 0);
+      const lev = state.leverage;
+      const size = margin * lev;
+      const liq = calcLiquidationPrice(entry, lev, state.side);
+      const distPct = entry > 0 ? ((liq - entry) / entry) * 100 : 0;
+
+      document.getElementById('sum-size').textContent = `$${fmtUSD(size)}`;
+      document.getElementById('sum-entry').textContent = `$${fmtPrice(entry, sym)}`;
+      document.getElementById('sum-liq').textContent =
+        `$${fmtPrice(liq, sym)} (${distPct >= 0 ? '+' : ''}${distPct.toFixed(3)}%)`;
+
+      const submitBtn = document.getElementById('submit-order-btn');
+      submitBtn.className = `submit-btn ${state.side.toLowerCase()}`;
+      submitBtn.textContent = `${state.side === 'LONG' ? '롱(LONG)' : '숏(SHORT)'} 포지션 진입 · ${lev}x`;
+    }
+
+    function setOrderSide(side) {
+      state.side = side;
+      document.getElementById('btn-side-long').classList.toggle('active', side === 'LONG');
+      document.getElementById('btn-side-short').classList.toggle('active', side === 'SHORT');
+      updateOrderSummary();
+    }
+
+    document.getElementById('btn-side-long').addEventListener('click', () => setOrderSide('LONG'));
+    document.getElementById('btn-side-short').addEventListener('click', () => setOrderSide('SHORT'));
+
+    document.getElementById('mob-dock-long').addEventListener('click', () => {
+      setOrderSide('LONG');
+      document.getElementById('order-panel-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    document.getElementById('mob-dock-short').addEventListener('click', () => {
+      setOrderSide('SHORT');
+      document.getElementById('order-panel-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    const levSlider = document.getElementById('lev-slider');
+    levSlider.addEventListener('input', () => {
+      state.leverage = parseInt(levSlider.value, 10);
+      document.getElementById('lev-text').textContent = `${state.leverage}x`;
+      document.querySelectorAll('#lev-presets .preset-btn').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.lev, 10) === state.leverage);
+      });
+      updateOrderSummary();
+    });
+
+    document.querySelectorAll('#lev-presets .preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.leverage = parseInt(btn.dataset.lev, 10);
+        levSlider.value = state.leverage;
+        document.getElementById('lev-text').textContent = `${state.leverage}x`;
+        document.querySelectorAll('#lev-presets .preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateOrderSummary();
+      });
+    });
+
+    const marginInput = document.getElementById('margin-input');
+    marginInput.addEventListener('input', updateOrderSummary);
+
+    document.getElementById('btn-half').addEventListener('click', () => {
+      const cur = parseFloat(marginInput.value) || 0;
+      marginInput.value = Math.max(1, (cur / 2)).toFixed(2);
+      updateOrderSummary();
+    });
+
+    document.getElementById('btn-double').addEventListener('click', () => {
+      const cur = parseFloat(marginInput.value) || 10;
+      marginInput.value = Math.min(state.balance, cur * 2).toFixed(2);
+      updateOrderSummary();
+    });
+
+    document.getElementById('btn-max').addEventListener('click', () => {
+      marginInput.value = state.balance.toFixed(2);
+      updateOrderSummary();
+    });
+
+    document.querySelectorAll('.pct-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pct = parseFloat(btn.dataset.pct);
+        marginInput.value = (state.balance * pct).toFixed(2);
+        updateOrderSummary();
+      });
+    });
+
+    document.getElementById('quick-tp').addEventListener('click', () => {
+      const entry = state.prices[state.selectedSymbol];
+      const m = getMarket();
+      const move = (1.0 / state.leverage);
+      const tp = state.side === 'LONG' ? entry * (1 + move) : entry * (1 - move);
+      document.getElementById('tp-input').value = tp.toFixed(m.decimals);
+    });
+
+    document.getElementById('quick-sl').addEventListener('click', () => {
+      const entry = state.prices[state.selectedSymbol];
+      const m = getMarket();
+      const move = (0.5 / state.leverage);
+      const sl = state.side === 'LONG' ? entry * (1 - move) : entry * (1 + move);
+      document.getElementById('sl-input').value = sl.toFixed(m.decimals);
+    });
+
+    // ==========================================
+    // 10. Position Execution, PnL Card & Liquidation
+    // ==========================================
+    function openPnLCertificate(record) {
+      const roi = (record.pnl / record.margin) * 100;
+      const isWin = record.pnl >= 0;
+
+      document.getElementById('cert-time').textContent = record.time;
+      document.getElementById('cert-pair').textContent = `${record.pairName} · ${record.side} ${record.leverage}x`;
+
+      const roiEl = document.getElementById('cert-roi');
+      roiEl.textContent = `${isWin ? '+' : ''}${roi.toFixed(2)}%`;
+      roiEl.className = 'pnl-roi-big mono ' + (isWin ? 'text-long' : 'text-short');
+
+      const pnlEl = document.getElementById('cert-pnl');
+      pnlEl.textContent = `${isWin ? '+' : ''}$${fmtUSD(record.pnl)} USDT`;
+      pnlEl.className = 'mono ' + (isWin ? 'text-long' : 'text-short');
+
+      document.getElementById('cert-entry').textContent = `$${fmtPrice(record.entryPrice, record.symbol)}`;
+      document.getElementById('cert-close').textContent = `$${fmtPrice(record.closePrice, record.symbol)}`;
+      document.getElementById('cert-user').textContent = state.user ? state.user.nickname : 'Trader';
+      document.getElementById('cert-reason').textContent = record.reason;
+
+      document.getElementById('pnl-modal').style.display = 'flex';
+    }
+
+    document.getElementById('close-cert-btn').addEventListener('click', () => {
+      document.getElementById('pnl-modal').style.display = 'none';
+    });
+
+    document.getElementById('submit-order-btn').addEventListener('click', () => {
+      const margin = parseFloat(marginInput.value);
+      if (isNaN(margin) || margin <= 0) {
+        showToast('올바른 증거금 금액을 입력해주세요.');
+        return;
+      }
+      if (margin > state.balance + 0.0001) {
+        showToast('주문 가능 잔고가 부족합니다.');
+        return;
+      }
+
+      const sym = state.selectedSymbol;
+      const entry = state.prices[sym];
+      const lev = state.leverage;
+      const liq = calcLiquidationPrice(entry, lev, state.side);
+      const tpVal = parseFloat(document.getElementById('tp-input').value) || null;
+      const slVal = parseFloat(document.getElementById('sl-input').value) || null;
+
+      state.balance = Math.max(0, state.balance - margin);
+      const pos = {
+        id: Date.now() + Math.random(),
+        symbol: sym,
+        pairName: getMarket(sym).name,
+        side: state.side,
+        leverage: lev,
+        margin: margin,
+        size: margin * lev,
+        entryPrice: entry,
+        liqPrice: liq,
+        tp: tpVal,
+        sl: slVal,
+        openedAt: new Date().toLocaleTimeString('ko-KR')
+      };
+
+      state.positions.unshift(pos);
+      saveState();
+      updateAccountUI();
+      renderPositions();
+
+      SoundFX.playDing();
+      showToast(`[체결] ${pos.pairName} ${pos.side} ${lev}x 진입 ($${fmtUSD(margin)})`);
+
+      const nick = state.user ? state.user.nickname : 'Trader';
+      broadcastTradeEvent(
+        `[진입] ${nick} · ${pos.pairName} ${pos.side} ${lev}x ($${fmtUSD(pos.size)})`,
+        pos.side,
+        false
+      );
+    });
+
+    function closePosition(posId, closePrice, reason = '시장가 청산') {
+      const idx = state.positions.findIndex(p => p.id === posId);
+      if (idx === -1) return;
+      const p = state.positions[idx];
+
+      let pnl = 0;
+      if (reason === '강제 청산 (Liquidation)') {
+        pnl = -p.margin;
+      } else {
+        const diffRatio = p.side === 'LONG'
+          ? (closePrice - p.entryPrice) / p.entryPrice
+          : (p.entryPrice - closePrice) / p.entryPrice;
+        pnl = p.size * diffRatio;
+        const returned = Math.max(0, p.margin + pnl);
+        state.balance += returned;
+      }
+
+      const record = {
+        id: Date.now() + Math.random(),
+        time: new Date().toLocaleTimeString('ko-KR'),
+        pairName: p.pairName,
+        symbol: p.symbol,
+        side: p.side,
+        leverage: p.leverage,
+        margin: p.margin,
+        entryPrice: p.entryPrice,
+        closePrice: closePrice,
+        reason: reason,
+        pnl: pnl
+      };
+
+      state.positions.splice(idx, 1);
+      state.history.unshift(record);
+
+      saveState();
+      updateAccountUI();
+      renderPositions();
+      renderLeaderboard();
+
+      const nick = state.user ? state.user.nickname : 'Trader';
+
+      if (reason === '강제 청산 (Liquidation)') {
+        SoundFX.playLiquidation();
+        document.body.classList.remove('shake');
+        void document.body.offsetWidth;
+        document.body.classList.add('shake');
+        showToast(`[강제 청산] ${p.pairName} ${p.side} ${p.leverage}x 포지션이 전액 청산되었습니다.`, true);
+        broadcastTradeEvent(
+          `[강제청산] ${nick} · ${p.pairName} ${p.side} ${p.leverage}x (-$${fmtUSD(p.margin)})`,
+          'SHORT',
+          true
+        );
+      } else {
+        SoundFX.playCloseProfit();
+        const sign = pnl >= 0 ? '+' : '';
+        showToast(`[${reason}] ${p.pairName} 실현 손익: ${sign}$${fmtUSD(pnl)}`);
+        broadcastTradeEvent(
+          `[청산] ${nick} · ${p.pairName} ${p.side} ${p.leverage}x (${sign}$${fmtUSD(pnl)})`,
+          pnl >= 0 ? 'LONG' : 'SHORT',
+          pnl < 0
+        );
+      }
+    }
+
+    function evaluatePositions() {
+      for (let i = state.positions.length - 1; i >= 0; i--) {
+        const p = state.positions[i];
+        const mark = state.prices[p.symbol];
+        if (!mark) continue;
+
+        if (p.side === 'LONG' && mark <= p.liqPrice) {
+          closePosition(p.id, p.liqPrice, '강제 청산 (Liquidation)');
+          continue;
+        }
+        if (p.side === 'SHORT' && mark >= p.liqPrice) {
+          closePosition(p.id, p.liqPrice, '강제 청산 (Liquidation)');
+          continue;
+        }
+
+        if (p.tp) {
+          if ((p.side === 'LONG' && mark >= p.tp) || (p.side === 'SHORT' && mark <= p.tp)) {
+            closePosition(p.id, mark, '익절 예약 체결 (TP)');
+            continue;
+          }
+        }
+
+        if (p.sl) {
+          if ((p.side === 'LONG' && mark <= p.sl) || (p.side === 'SHORT' && mark >= p.sl)) {
+            closePosition(p.id, mark, '손절 예약 체결 (SL)');
+            continue;
+          }
+        }
+      }
+      updateAccountUI();
+      renderPositions();
+    }
+
+    function renderPositions() {
+      document.getElementById('open-count').textContent = state.positions.length;
+      document.getElementById('hist-count').textContent = state.history.length;
+
+      const openBody = document.getElementById('open-pos-body');
+      const emptyOpen = document.getElementById('empty-open');
+      openBody.innerHTML = '';
+
+      let totalUpnl = 0;
+
+      if (state.positions.length === 0) {
+        emptyOpen.style.display = 'block';
+      } else {
+        emptyOpen.style.display = 'none';
+        state.positions.forEach(p => {
+          const mark = state.prices[p.symbol] || p.entryPrice;
+          const diffRatio = p.side === 'LONG'
+            ? (mark - p.entryPrice) / p.entryPrice
+            : (p.entryPrice - mark) / p.entryPrice;
+          const upnl = p.size * diffRatio;
+          const roe = (upnl / p.margin) * 100;
+          totalUpnl += upnl;
+
+          const tr = document.createElement('tr');
+          tr.className = 'mono';
+          tr.innerHTML = `
+            <td style="font-family:'Inter',sans-serif;">
+              <span class="badge-side ${p.side}">${p.side} ${p.leverage}x</span>
+              <strong>${p.pairName}</strong>
+            </td>
+            <td>$${fmtUSD(p.margin)} <span style="color:var(--text-secondary);">/ $${fmtUSD(p.size)}</span></td>
+            <td>$${fmtPrice(p.entryPrice, p.symbol)}</td>
+            <td>$${fmtPrice(mark, p.symbol)}</td>
+            <td class="text-warn">$${fmtPrice(p.liqPrice, p.symbol)}</td>
+            <td style="color:var(--text-secondary);font-size:11.5px;">
+              ${p.tp ? '$' + fmtPrice(p.tp, p.symbol) : '-'} / ${p.sl ? '$' + fmtPrice(p.sl, p.symbol) : '-'}
+            </td>
+            <td class="${upnl >= 0 ? 'text-long' : 'text-short'}" style="font-weight:700;">
+              ${upnl >= 0 ? '+' : ''}$${fmtUSD(upnl)} (${roe >= 0 ? '+' : ''}${roe.toFixed(2)}%)
+            </td>
+            <td style="text-align:right;">
+              <button class="close-pos-btn" data-id="${p.id}">시장가 청산</button>
+            </td>
+          `;
+          openBody.appendChild(tr);
+        });
+
+        openBody.querySelectorAll('.close-pos-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = parseFloat(btn.dataset.id);
+            const pos = state.positions.find(x => x.id === id);
+            if (pos) closePosition(id, state.prices[pos.symbol], '시장가 청산');
+          });
+        });
+      }
+
+      const upnlEl = document.getElementById('total-upnl');
+      upnlEl.textContent = `${totalUpnl >= 0 ? '+' : ''}$${fmtUSD(totalUpnl)}`;
+      upnlEl.className = totalUpnl >= 0 ? 'text-long' : 'text-short';
+
+      const histBody = document.getElementById('history-pos-body');
+      const emptyHist = document.getElementById('empty-hist');
+      histBody.innerHTML = '';
+      if (state.history.length === 0) {
+        emptyHist.style.display = 'block';
+      } else {
+        emptyHist.style.display = 'none';
+        state.history.slice(0, 30).forEach((h, index) => {
+          const tr = document.createElement('tr');
+          tr.className = 'mono';
+          tr.innerHTML = `
+            <td style="color:var(--text-secondary);">${h.time}</td>
+            <td style="font-family:'Inter',sans-serif;">
+              <span class="badge-side ${h.side}">${h.side} ${h.leverage}x</span>
+              <strong>${h.pairName}</strong>
+            </td>
+            <td>$${fmtUSD(h.margin)}</td>
+            <td>$${fmtPrice(h.entryPrice, h.symbol)}</td>
+            <td>$${fmtPrice(h.closePrice, h.symbol)}</td>
+            <td style="font-family:'Inter',sans-serif;color:var(--text-secondary);">${h.reason}</td>
+            <td style="text-align:right;font-weight:700;" class="${h.pnl >= 0 ? 'text-long' : 'text-short'}">
+              ${h.pnl >= 0 ? '+' : ''}$${fmtUSD(h.pnl)}
+              <button class="mini-btn cert-open-btn" data-idx="${index}" style="margin-left:8px;">인증서</button>
+            </td>
+          `;
+          histBody.appendChild(tr);
+        });
+
+        histBody.querySelectorAll('.cert-open-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const h = state.history[parseInt(btn.dataset.idx, 10)];
+            if (h) openPnLCertificate(h);
+          });
+        });
+      }
+    }
+
+    // ==========================================
+    // 11. Real Multiplayer Leaderboard Rendering
+    // ==========================================
+    function renderLeaderboard() {
+      if (state.user && !state.deletedUserIds[state.user.id]) {
+        const myCompact = state.positions.map(p => ({
+          symbol: p.symbol,
+          pairName: p.pairName,
+          side: p.side,
+          leverage: p.leverage,
+          margin: Number(p.margin.toFixed(2)),
+          size: Number(p.size.toFixed(2)),
+          entryPrice: p.entryPrice
+        }));
+        state.globalPlayers[state.user.id] = {
+          id: state.user.id,
+          nickname: state.user.nickname,
+          email: state.user.email,
+          password: state.user.password,
+          balance: Number(state.balance.toFixed(2)),
+          positions: myCompact,
+          updatedAt: Date.now()
+        };
+      }
+
+      const playersList = Object.values(state.globalPlayers)
+        .filter(pl => pl && pl.id && !state.deletedUserIds[pl.id])
+        .map(pl => {
+          const posArr = Array.isArray(pl.positions) ? pl.positions : [];
+          const equity = calcPlayerEquity(pl.balance, posArr);
+          const roi = ((equity - 1000) / 1000) * 100;
+          const isMe = state.user && pl.id === state.user.id;
+          return {
+            id: pl.id,
+            nickname: pl.nickname,
+            equity,
+            roi,
+            positions: posArr,
+            isMe
+          };
+        });
+
+      playersList.sort((a, b) => b.equity - a.equity);
+
+      const count = playersList.length;
+      document.getElementById('rank-user-count').textContent = count;
+      document.getElementById('online-users-badge').textContent = `LIVE · ${Math.max(1, count)}명`;
+      document.getElementById('rank-last-updated').textContent =
+        new Date().toLocaleTimeString('ko-KR');
+
+      const tbody = document.getElementById('rank-pos-body');
+      const emptyRank = document.getElementById('empty-rank');
+      tbody.innerHTML = '';
+
+      if (playersList.length === 0) {
+        emptyRank.style.display = 'block';
+        return;
+      }
+      emptyRank.style.display = 'none';
+
+      playersList.forEach((p, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'mono';
+        if (p.isMe) {
+          tr.style.background = '#151921';
+        }
+
+        let posSummary = '<span style="color:var(--text-muted);">관망 중</span>';
+        if (p.positions.length > 0) {
+          const topPos = p.positions[0];
+          const extra = p.positions.length > 1 ? ` 외 ${p.positions.length - 1}건` : '';
+          posSummary = `<span class="badge-side ${topPos.side}">${topPos.side} ${topPos.leverage}x</span>${escapeHtml(topPos.pairName)}${extra}`;
+        }
+
+        tr.innerHTML = `
+          <td><strong>#${idx + 1}</strong></td>
+          <td style="font-family:'Inter',sans-serif;font-weight:${p.isMe ? '700' : '500'};">
+            ${escapeHtml(p.nickname)} ${p.isMe ? '<span style="color:var(--text-secondary);font-size:11px;">(나)</span>' : ''}
+          </td>
+          <td><span class="tier-badge" style="display:inline-block;padding:2px 7px;font-size:10px;">${getTierName(p.equity)}</span></td>
+          <td style="font-family:'Inter',sans-serif;font-size:12px;">${posSummary}</td>
+          <td class="${p.roi >= 0 ? 'text-long' : 'text-short'}" style="font-weight:700;">
+            ${p.roi >= 0 ? '+' : ''}${p.roi.toFixed(2)}%
+          </td>
+          <td style="text-align:right;font-weight:700;">$${fmtUSD(p.equity)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function switchBottomTab(target) {
+      document.getElementById('tab-open-pos').classList.toggle('active', target === 'open');
+      document.getElementById('tab-history-pos').classList.toggle('active', target === 'hist');
+      document.getElementById('tab-rank-pos').classList.toggle('active', target === 'rank');
+
+      document.getElementById('open-pos-view').style.display = target === 'open' ? 'block' : 'none';
+      document.getElementById('history-pos-view').style.display = target === 'hist' ? 'block' : 'none';
+      document.getElementById('rank-pos-view').style.display = target === 'rank' ? 'block' : 'none';
+    }
+
+    document.getElementById('tab-open-pos').addEventListener('click', () => switchBottomTab('open'));
+    document.getElementById('tab-history-pos').addEventListener('click', () => switchBottomTab('hist'));
+    document.getElementById('tab-rank-pos').addEventListener('click', () => {
+      renderLeaderboard();
+      switchBottomTab('rank');
+    });
+
+    // ==========================================
+    // 12. Interactive Candlestick & Drawing Canvas (Mouse + Touch Support)
+    // ==========================================
+    const canvas = document.getElementById('chartCanvas');
+    const ctx = canvas.getContext('2d');
+    const canvasWrap = document.getElementById('canvas-wrap');
+
+    let chartBounds = { minP: 0, maxP: 1, padLeft: 10, padRight: 72, padTop: 32, padBottom: 24 };
+
+    function resizeCanvas() {
+      const rect = canvasWrap.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawChart();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function priceToY(price, height) {
+      const { minP, maxP, padTop, padBottom } = chartBounds;
+      const plotH = height - padTop - padBottom;
+      return padTop + ((maxP - price) / (maxP - minP || 1)) * plotH;
+    }
+
+    function yToPrice(y, height) {
+      const { minP, maxP, padTop, padBottom } = chartBounds;
+      const plotH = height - padTop - padBottom;
+      return maxP - ((y - padTop) / plotH) * (maxP - minP);
+    }
+
+    function drawChart() {
+      const rect = canvasWrap.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      if (w === 0 || h === 0) return;
+
+      ctx.clearRect(0, 0, w, h);
+
+      ctx.fillStyle = '#07080a';
+      ctx.fillRect(0, 0, w, h);
+
+      const candles = state.candles;
+      if (!candles || candles.length === 0) return;
+
+      const candleCount = w < 600 ? 52 : 85;
+      const visible = candles.slice(-candleCount);
+      let minP = Infinity;
+      let maxP = -Infinity;
+      let maxVol = 0;
+
+      visible.forEach(c => {
+        if (c.low < minP) minP = c.low;
+        if (c.high > maxP) maxP = c.high;
+        if (c.volume > maxVol) maxVol = c.volume;
+      });
+
+      const pad = (maxP - minP) * 0.12 || maxP * 0.002;
+      minP -= pad;
+      maxP += pad;
+      chartBounds.minP = minP;
+      chartBounds.maxP = maxP;
+
+      const plotW = w - chartBounds.padLeft - chartBounds.padRight;
+      const plotH = h - chartBounds.padTop - chartBounds.padBottom;
+
+      ctx.strokeStyle = '#13161c';
+      ctx.lineWidth = 1;
+      ctx.font = '10.5px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#6c7482';
+      ctx.textAlign = 'left';
+
+      const rows = 5;
+      for (let i = 0; i <= rows; i++) {
+        const y = chartBounds.padTop + (plotH / rows) * i;
+        ctx.beginPath();
+        ctx.moveTo(chartBounds.padLeft, y);
+        ctx.lineTo(w - chartBounds.padRight, y);
+        ctx.stroke();
+
+        const pVal = yToPrice(y, h);
+        ctx.fillText(fmtPrice(pVal), w - chartBounds.padRight + 6, y + 4);
+      }
+
+      const stepX = plotW / visible.length;
+      const candleW = Math.max(3, stepX * 0.66);
+
+      visible.forEach((c, idx) => {
+        const xCenter = chartBounds.padLeft + idx * stepX + stepX / 2;
+        const isUp = c.close >= c.open;
+        const color = isUp ? '#00d084' : '#ff3b5c';
+
+        const volH = maxVol > 0 ? (c.volume / maxVol) * (plotH * 0.16) : 0;
+        ctx.fillStyle = isUp ? 'rgba(0, 208, 132, 0.16)' : 'rgba(255, 59, 92, 0.16)';
+        ctx.fillRect(xCenter - candleW / 2, h - chartBounds.padBottom - volH, candleW, volH);
+
+        const yHigh = priceToY(c.high, h);
+        const yLow = priceToY(c.low, h);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(xCenter, yHigh);
+        ctx.lineTo(xCenter, yLow);
+        ctx.stroke();
+
+        const yOpen = priceToY(c.open, h);
+        const yClose = priceToY(c.close, h);
+        const bodyTop = Math.min(yOpen, yClose);
+        const bodyH = Math.max(1.5, Math.abs(yClose - yOpen));
+        ctx.fillStyle = color;
+        ctx.fillRect(xCenter - candleW / 2, bodyTop, candleW, bodyH);
+      });
+
+      // Open Position Lines
+      state.positions.filter(p => p.symbol === state.selectedSymbol).forEach(p => {
+        const yEntry = priceToY(p.entryPrice, h);
+        const yLiq = priceToY(p.liqPrice, h);
+
+        if (yEntry >= chartBounds.padTop && yEntry <= h - chartBounds.padBottom) {
+          ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = p.side === 'LONG' ? '#00d084' : '#ff3b5c';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(chartBounds.padLeft, yEntry);
+          ctx.lineTo(w - chartBounds.padRight, yEntry);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.fillStyle = p.side === 'LONG' ? '#00d084' : '#ff3b5c';
+          ctx.fillRect(chartBounds.padLeft + 4, yEntry - 9, 88, 18);
+          ctx.fillStyle = '#000';
+          ctx.font = 'bold 10px "JetBrains Mono", monospace';
+          ctx.fillText(`${p.side} ${p.leverage}x`, chartBounds.padLeft + 9, yEntry + 3);
+        }
+
+        if (yLiq >= chartBounds.padTop && yLiq <= h - chartBounds.padBottom) {
+          ctx.setLineDash([2, 3]);
+          ctx.strokeStyle = '#f5b041';
+          ctx.beginPath();
+          ctx.moveTo(chartBounds.padLeft, yLiq);
+          ctx.lineTo(w - chartBounds.padRight, yLiq);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      });
+
+      // User Drawings
+      const shapes = [...(state.drawings[state.selectedSymbol] || [])];
+      if (state.currentDrawing) shapes.push(state.currentDrawing);
+
+      shapes.forEach(s => {
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.6;
+        if (s.type === 'trendline') {
+          const y1 = priceToY(s.p1, h);
+          const y2 = priceToY(s.p2, h);
+          ctx.beginPath();
+          ctx.moveTo(s.x1, y1);
+          ctx.lineTo(s.x2, y2);
+          ctx.stroke();
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath(); ctx.arc(s.x1, y1, 3, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(s.x2, y2, 3, 0, Math.PI * 2); ctx.fill();
+        } else if (s.type === 'hline') {
+          const y1 = priceToY(s.p1, h);
+          ctx.beginPath();
+          ctx.moveTo(chartBounds.padLeft, y1);
+          ctx.lineTo(w - chartBounds.padRight, y1);
+          ctx.stroke();
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(w - chartBounds.padRight + 2, y1 - 9, 68, 18);
+          ctx.fillStyle = '#000000';
+          ctx.font = 'bold 10px "JetBrains Mono", monospace';
+          ctx.fillText(fmtPrice(s.p1), w - chartBounds.padRight + 5, y1 + 3);
+        } else if (s.type === 'rect') {
+          const y1 = priceToY(s.p1, h);
+          const y2 = priceToY(s.p2, h);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+          ctx.fillRect(Math.min(s.x1, s.x2), Math.min(y1, y2), Math.abs(s.x2 - s.x1), Math.abs(y2 - y1));
+          ctx.strokeRect(Math.min(s.x1, s.x2), Math.min(y1, y2), Math.abs(s.x2 - s.x1), Math.abs(y2 - y1));
+        } else if (s.type === 'brush' && s.points.length > 1) {
+          ctx.beginPath();
+          s.points.forEach((pt, idx) => {
+            const py = priceToY(pt.p, h);
+            if (idx === 0) ctx.moveTo(pt.x, py);
+            else ctx.lineTo(pt.x, py);
+          });
+          ctx.stroke();
+        }
+      });
+
+      // Live Price Tag Line
+      const lastCandle = visible[visible.length - 1];
+      const liveP = lastCandle.close;
+      const yLive = priceToY(liveP, h);
+      const isUpNow = liveP >= lastCandle.open;
+
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = isUpNow ? '#00d084' : '#ff3b5c';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(chartBounds.padLeft, yLive);
+      ctx.lineTo(w - chartBounds.padRight, yLive);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = isUpNow ? '#00d084' : '#ff3b5c';
+      ctx.fillRect(w - chartBounds.padRight + 2, yLive - 10, 69, 20);
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 10.5px "JetBrains Mono", monospace';
+      ctx.fillText(fmtPrice(liveP), w - chartBounds.padRight + 5, yLive + 4);
+
+      // Update OHLC Overlay
+      const hoverIdx = state.mouse.inside
+        ? Math.min(visible.length - 1, Math.max(0, Math.floor((state.mouse.x - chartBounds.padLeft) / stepX)))
+        : visible.length - 1;
+      const targetC = visible[hoverIdx] || lastCandle;
+      document.getElementById('o-val').textContent = fmtPrice(targetC.open);
+      document.getElementById('h-val').textContent = fmtPrice(targetC.high);
+      document.getElementById('l-val').textContent = fmtPrice(targetC.low);
+      document.getElementById('c-val').textContent = fmtPrice(targetC.close);
+
+      // Crosshair
+      if (state.mouse.inside && state.mouse.x < w - chartBounds.padRight) {
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(state.mouse.x, chartBounds.padTop);
+        ctx.lineTo(state.mouse.x, h - chartBounds.padBottom);
+        ctx.moveTo(chartBounds.padLeft, state.mouse.y);
+        ctx.lineTo(w - chartBounds.padRight, state.mouse.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        const cursorPrice = yToPrice(state.mouse.y, h);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(w - chartBounds.padRight + 2, state.mouse.y - 10, 69, 20);
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 10.5px "JetBrains Mono", monospace';
+        ctx.fillText(fmtPrice(cursorPrice), w - chartBounds.padRight + 5, state.mouse.y + 4);
+      }
+
+      ctx.strokeStyle = '#1e2229';
+      ctx.beginPath();
+      ctx.moveTo(w - chartBounds.padRight, 0);
+      ctx.lineTo(w - chartBounds.padRight, h);
+      ctx.stroke();
+    }
+
+    function getPointerPos(clientX, clientY) {
+      const rect = canvasWrap.getBoundingClientRect();
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top,
+        height: rect.height
+      };
+    }
+
+    function handlePointerStart(clientX, clientY) {
+      const { x, y, height } = getPointerPos(clientX, clientY);
+      const p = yToPrice(y, height);
+      state.mouse = { x, y, inside: true };
+
+      if (state.drawTool === 'hline') {
+        state.drawings[state.selectedSymbol].push({ type: 'hline', p1: p });
+        drawChart();
+        return;
+      }
+      if (state.drawTool === 'trendline' || state.drawTool === 'rect') {
+        state.currentDrawing = { type: state.drawTool, x1: x, p1: p, x2: x, p2: p };
+      } else if (state.drawTool === 'brush') {
+        state.currentDrawing = { type: 'brush', points: [{ x, p }] };
+      }
+      drawChart();
+    }
+
+    function handlePointerMove(clientX, clientY) {
+      const { x, y, height } = getPointerPos(clientX, clientY);
+      state.mouse = { x, y, inside: true };
+
+      if (state.currentDrawing) {
+        const p = yToPrice(y, height);
+        if (state.currentDrawing.type === 'trendline' || state.currentDrawing.type === 'rect') {
+          state.currentDrawing.x2 = x;
+          state.currentDrawing.p2 = p;
+        } else if (state.currentDrawing.type === 'brush') {
+          state.currentDrawing.points.push({ x, p });
+        }
+      }
+      drawChart();
+    }
+
+    function handlePointerEnd() {
+      if (state.currentDrawing) {
+        state.drawings[state.selectedSymbol].push(state.currentDrawing);
+        state.currentDrawing = null;
+        drawChart();
+      }
+    }
+
+    canvasWrap.addEventListener('mousedown', (e) => handlePointerStart(e.clientX, e.clientY));
+    canvasWrap.addEventListener('mousemove', (e) => handlePointerMove(e.clientX, e.clientY));
+    window.addEventListener('mouseup', handlePointerEnd);
+    canvasWrap.addEventListener('mouseleave', () => {
+      state.mouse.inside = false;
+      drawChart();
+    });
+
+    canvasWrap.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 0) {
+        e.preventDefault();
+        handlePointerStart(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: false });
+
+    canvasWrap.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) {
+        e.preventDefault();
+        handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: false });
+
+    canvasWrap.addEventListener('touchend', () => {
+      handlePointerEnd();
+      state.mouse.inside = false;
+      drawChart();
+    });
+
+    const toolHints = {
+      crosshair: '도구: 십자선 · 차트 터치/마우스로 캔들 시·고·저·종 확인',
+      trendline: '도구: 추세선 · 차트에서 드래그하여 추세선 작도',
+      hline: '도구: 수평선 · 원하는 가격대를 터치/클릭하여 지지·저항선 표시',
+      rect: '도구: 박스 영역 · 드래그하여 매물대/구간 박스 작도',
+      brush: '도구: 자유 펜 · 차트 위에 자유롭게 드래그하여 메모 작도'
+    };
+
+    document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.drawTool = btn.dataset.tool;
+        document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('draw-hint').textContent = toolHints[state.drawTool];
+      });
+    });
+
+    document.getElementById('undo-draw-btn').addEventListener('click', () => {
+      const arr = state.drawings[state.selectedSymbol];
+      if (arr && arr.length > 0) {
+        arr.pop();
+        drawChart();
+      }
+    });
+
+    document.getElementById('clear-draw-btn').addEventListener('click', () => {
+      state.drawings[state.selectedSymbol] = [];
+      drawChart();
+    });
+
+    document.querySelectorAll('.tf-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        state.timeframe = btn.dataset.tf;
+        document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        await fetchKlines(state.selectedSymbol, state.timeframe);
+      });
+    });
+
+    setInterval(() => {
+      const now = new Date();
+      document.getElementById('clock-display').textContent = now.toTimeString().split(' ')[0] + ' UTC+9';
+    }, 1000);
+
+    // ==========================================
+    // 13. Bootstrap App
+    // ==========================================
+    (async function init() {
+      if (loadState()) {
+        document.getElementById('auth-overlay').style.display = 'none';
+      }
+      setupMultiplayerSync();
+      updateAccountUI();
+      renderTickerTabs();
+      updateHeaderStats();
+      updateOrderSummary();
+      renderPositions();
+      renderLeaderboard();
+      updateRealSentimentBar();
+      resizeCanvas();
+
+      await fetch24hTickers();
+      await fetchKlines(state.selectedSymbol, state.timeframe);
+      connectWebSocket();
+    })();
+  </script>
+</body>
+</html>
